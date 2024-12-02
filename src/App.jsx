@@ -1,23 +1,19 @@
 import React from 'react'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import LoginForm from './components/LoginForm'
-import RequestViewer from './components/RequestViewer'
-import AuthGuard from './components/AuthGuard'
+import { Routes, Route } from 'react-router-dom'
+import AuthForm from './components/auth/AuthForm'
+import RequestViewer from './components/request/RequestViewer'
+import AuthGuard from './components/auth/AuthGuard'
 
 function App() {
   return (
-    <BrowserRouter>
-      <div className="min-h-screen bg-[#0A2647]">
-        <Routes>
-          <Route path="/login" element={<LoginForm />} />
-          <Route path="/" element={
-            <AuthGuard>
-              <RequestViewer />
-            </AuthGuard>
-          } />
-        </Routes>
-      </div>
-    </BrowserRouter>
+    <Routes>
+      <Route path="/auth" element={<AuthForm />} />
+      <Route path="/" element={
+        <AuthGuard>
+          <RequestViewer />
+        </AuthGuard>
+      } />
+    </Routes>
   )
 }
 
