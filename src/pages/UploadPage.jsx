@@ -50,45 +50,41 @@ const UploadPage = () => {
 const processFile = async (file) => {
   setLoading(true);
   setError(null);
-  try {
-    setFile(file);
+   try {
     const text = await PDFReader.readPDF(file);
-    
     console.log("Starting approval extraction");
 
-    // New approach using string search
     const approvals = [];
     let searchText = text;
     let startIndex = 0;
     let count = 0;
+    let foundFirst = false;
 
-    while (count < 2) {  // Look for first two approvals only
-      // Find next occurrence of "Approved"
+    while (count < 2) {
       startIndex = searchText.indexOf('Approved', startIndex);
-      if (startIndex === -1) break;  // No more "Approved" found
+      if (startIndex === -1) break;
 
-      // Get the full line containing "Approved"
       const lineEnd = searchText.indexOf('\n', startIndex);
       const line = searchText.substring(startIndex, lineEnd !== -1 ? lineEnd : undefined);
       
-      console.log("Found line:", line);
-
-      // Process line if it's an actual approval
       if (line.includes('Approved')) {
-        try {
-          // Split by multiple spaces and filter out empty strings
-          const parts = line.split(/\s+/).filter(part => part.length > 0);
-          console.log("Line parts:", parts);
+        if (!foundFirst) {
+          // Skip the first "Approved" line
+          foundFirst = true;
+          startIndex = lineEnd || (startIndex + 1);
+          continue;
+        }
 
-          if (parts.length >= 5) {  // Ensure we have all required parts
+        try {
+          const parts = line.split(/\s+/).filter(part => part.length > 0);
+          if (parts.length >= 5) {
             const approval = {
-              state: parts[0],  // "Approved"
-              approver: parts[1] + ' ' + parts[2],  // Assuming two-word name
-              item: parts[3] + ' ' + parts[4],  // Assuming two-word item
-              created: parts[5] + ' ' + parts[6],  // Date and time
-              createdOriginal: parts[7] + ' ' + parts[8]  // Original date and time
+              state: parts[0],
+              approver: parts[1] + ' ' + parts[2],
+              item: parts[3] + ' ' + parts[4],
+              created: parts[5] + ' ' + parts[6],
+              createdOriginal: parts[7] + ' ' + parts[8]
             };
-            console.log("Created approval:", approval);
             approvals.push(approval);
             count++;
           }
@@ -96,8 +92,7 @@ const processFile = async (file) => {
           console.log("Error processing line:", err);
         }
       }
-
-      startIndex = lineEnd || (startIndex + 1);  // Move to next line
+      startIndex = lineEnd || (startIndex + 1);
     }
 
     console.log("Final approvals:", approvals);
@@ -312,37 +307,95 @@ const handleReset = () => {
                 />
               </div>
 
-              <div className="mt-6">
-  <label className="block text-sm font-medium text-gray-700 mb-1">
-    Approvals
-  </label>
-  <div className="bg-gray-50 rounded-md p-4">
-    <div className="grid grid-cols-4 gap-4 mb-2 text-sm font-medium text-gray-600">
-      <div>State</div>
-      <div>Approver</div>
-      <div>Item</div>
-      <div>Created</div>
-    </div>
-    {formData.approvals.map((approval, index) => (
-      <div key={index} className="grid grid-cols-4 gap-4 text-sm border-t py-2">
-        <div className="flex items-center">
-          <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
-            {approval.state}
-          </span>
+  <div className="mt-6">
+    <label className="block text-sm font-medium text-gray-700 mb-1">
+      Approvals
+    </label>
+    <div className="bg-gray-50 rounded-md p-4">
+      <div className="grid grid-cols-4 gap-4 mb-2 text-sm font-medium text-gray-600">
+        <div>State</div>
+        <div>Approver</div>
+        <div>Item</div>
+        <div>Created</div>
+      </div>
+      {formData.approvals.map((approval, index) => (
+        <div key={index} className="grid grid-cols-4 gap-4 text-sm border-t py-2">
+          <div>
+            <input
+              type="text"
+              value={approval.state}
+              onChange={(e) => {
+                const newApprovals = [...formData.approvals];
+                newApprovals[index] = {
+                  ...approval,
+                  state: e.target.value
+                };
+                setFormData({
+                  ...formData,
+                  approvals: newApprovals
+                });
+              }}
+              className="w-full px-2 py-1 border rounded focus:ring-2 focus:ring-[#0A2647] focus:border-transparent"
+            />
+          </div>
+          <div>
+            <input
+              type="text"
+              value={approval.approver}
+              onChange={(e) => {
+                const newApprovals = [...formData.approvals];
+                newApprovals[index] = {
+                  ...approval,
+                  approver: e.target.value
+                };
+                setFormData({
+                  ...formData,
+                  approvals: newApprovals
+                });
+              }}
+              className="w-full px-2 py-1 border rounded focus:ring-2 focus:ring-[#0A2647] focus:border-transparent"
+            />
+          </div>
+          <div>
+            <input
+              type="text"
+              value={approval.item}
+              onChange={(e) => {
+                const newApprovals = [...formData.approvals];
+                newApprovals[index] = {
+                  ...approval,
+                  item: e.target.value
+                };
+                setFormData({
+                  ...formData,
+                  approvals: newApprovals
+                });
+              }}
+              className="w-full px-2 py-1 border rounded focus:ring-2 focus:ring-[#0A2647] focus:border-transparent"
+            />
+          </div>
+          <div>
+            <input
+              type="text"
+              value={approval.created}
+              onChange={(e) => {
+                const newApprovals = [...formData.approvals];
+                newApprovals[index] = {
+                  ...approval,
+                  created: e.target.value
+                };
+                setFormData({
+                  ...formData,
+                  approvals: newApprovals
+                });
+              }}
+              className="w-full px-2 py-1 border rounded focus:ring-2 focus:ring-[#0A2647] focus:border-transparent"
+            />
+          </div>
         </div>
-        <div>{approval.approver}</div>
-        <div>{approval.item}</div>
-        <div>{new Date(approval.created).toLocaleString()}</div>
-      </div>
-    ))}
-    {formData.approvals.length === 0 && (
-      <div className="text-sm text-gray-500 py-2 text-center">
-        No approvals found
-      </div>
-    )}
+      ))}
+    </div>
   </div>
-</div>
-
               {error && (
                 <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md flex items-center">
                   <AlertCircle className="w-4 h-4 mr-2" />
