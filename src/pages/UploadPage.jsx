@@ -56,11 +56,15 @@ const UploadPage = () => {
       const data = {
         requestNumber: text.match(/Number:\s*(RITM\d+)/)?.[1] || '',
         requestedFor: text.match(/Request Requested for:\s*(.*?)\s*Company:/s)?.[1]?.trim() || '',
-        updatedToOpen: text.match(/Updated to open:\s*([^\n]+)/)?.[1] || '',
-        shortDescription: text.match(/Short description:\s*([^\n]+)/)?.[1] || '',
-        description: text.match(/Description:\s*([^\n]+)/)?.[1] || '',
-        workNotes: text.match(/Work notes:\s*([^\n]+)/)?.[1] || '',
-        state: text.match(/State:\s*([^\n]+)/)?.[1] || ''
+        updatedToOpen: text.match(/Opened:\s*(.*?)\s*Closed:/s)?.[1]?.trim() || '',
+        shortDescription: text.match(/Short description:\s*(.*?)\s*Description:/s)?.[1]?.trim() || '',
+        description: text.match(/Description:\s*(.*?)\s*Approver:/s)?.[1]?.trim() || '',
+        workNotes: text.match(/Work notes:\s*(.*?)\s*Additional comments:/s)?.[1]?.trim() || '',
+        state: text.match(/State:\s*(.*?)\s*Priority:/s)?.[1]?.trim() || ''
+
+
+
+ 
       };
 
           // Clean the requestedFor field by removing the prefix if it's still there
