@@ -1,4 +1,5 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { ThemeProvider } from './context/ThemeContext';
 import AuthForm from './components/auth/AuthForm';
 import UploadFormPage from './pages/UploadPage';
 import RequestsPage from './pages/RequestsPage';
@@ -7,6 +8,7 @@ import AuthGuard from './components/auth/AuthGuard';
 
 function App() {
   return (
+        <ThemeProvider>
     <Routes>
       <Route path="/auth" element={<AuthForm />} />
       <Route path="/" element={<AuthGuard><Layout /></AuthGuard>}>
@@ -15,6 +17,7 @@ function App() {
         <Route index element={<Navigate to="/upload" replace />} />
       </Route>
     </Routes>
+              </ThemeProvider>
   );
 }
 export default App;
