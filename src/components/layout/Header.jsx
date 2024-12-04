@@ -1,10 +1,9 @@
-// src/components/layout/Header.jsx
 import { useNavigate } from 'react-router-dom';
 import { LogOut, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { auth } from '@/config/firebase';
 
-const Header = () => {
+export const Header = () => {
   const navigate = useNavigate();
 
   const handleLogout = async () => {
