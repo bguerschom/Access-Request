@@ -113,7 +113,7 @@ try {
   };
 
   // Handle form submission
-  const handleSubmit = async (e) => {
+  const handleSubmit = async () => {
     e.preventDefault();
     setLoading(true);
     setError(null);
@@ -138,10 +138,10 @@ try {
     const requestData = {
       ...formData,
       fileUrl,
-      fileName: file.name,
+      fileName: file ? file.name : null,
       userId: auth.currentUser.uid,
       createdAt: new Date().toISOString(),
-      status: 'pending', // You can add status tracking
+      status: 'pending',
       uploadedBy: auth.currentUser.email
     };
 
