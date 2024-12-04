@@ -50,54 +50,34 @@ const UploadPage = () => {
 const processFile = async (file) => {
   setLoading(true);
   setError(null);
-   try {
+try {
     const text = await PDFReader.readPDF(file);
     console.log("Starting approval extraction");
 
     const approvals = [];
-    let searchText = text;
-    let startIndex = 0;
-    let count = 0;
-    let foundFirst = false;
-     
-    // Find all lines containing 'Approved'
-    const lines = text.split('\n')
-      .filter(line => line.includes('Approved'))
-      .map(line => line.trim());
 
-    console.log("Found approved lines:", lines);
+    // Find pattern: "Approved" followed by details, multiple times
+    const approvalPattern = /Approved\s+([^\d]+)\s+([^\d]+)\s+(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})\s+(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})/g;
 
-    // Get second and third lines (index 1 and 2)
-    for (let i = 1; i < 3; i++) {
-      const line = lines[i];
-      if (line) {
-        try {
-          // Split by 'Approved' first
-          const [_, rest] = line.split('Approved');
-          if (rest) {
-            // Find the timestamps
-            const timeMatch = rest.match(/(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})\s+(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})/);
-            if (timeMatch) {
-              // Get content before timestamps
-              const beforeTimes = rest.split(timeMatch[1])[0].trim();
-              // Get approver (first two words) and item (rest)
-              const words = beforeTimes.trim().split(/\s+/);
-              const approver = words.slice(0, 2).join(' ');
-              const item = words.slice(2).join(' ');
-
-              approvals.push({
-                state: 'Approved',
-                approver: approver.trim(),
-                item: item.trim(),
-                created: timeMatch[1],
-                createdOriginal: timeMatch[2]
-              });
-            }
-          }
-        } catch (err) {
-          console.log("Error processing line:", err);
+    let match;
+    let skipFirst = true;
+    while ((match = approvalPattern.exec(text)) !== null) {
+        if (skipFirst) {
+            skipFirst = false;
+            continue; // Skip first match
         }
-      }
+
+        if (approvals.length >= 2) break; // Only take 2 entries
+
+        console.log("Found match:", match);
+
+        approvals.push({
+            state: 'Approved',
+            approver: match[1].trim(),
+            item: match[2].trim(),
+            created: match[3],
+            createdOriginal: match[4]
+        });
     }
 
     console.log("Final approvals:", approvals);
