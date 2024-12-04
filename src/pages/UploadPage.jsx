@@ -62,14 +62,19 @@ const UploadPage = () => {
       .slice(0, 2); 
 
     approvedLines.forEach(line => {
-      const match = line.match(/Approved\s+([^\n]+)\s+([^\n]+)\s+(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})\s+(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})/);
-      if (match) {
+      // Extract values between their respective labels
+      const stateMatch = line.match(/^(Approved)/);
+      const approverMatch = line.match(/Approved\s+(.*?)\s+(?=Data|Switch|Access)/);
+      const itemMatch = line.match(/(?<=Approved\s+[\w\s]+\s+)(.*?)(?=\s+\d{4}-\d{2}-\d{2})/);
+      const datesMatch = line.match(/(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})\s+(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})/);
+
+      if (stateMatch && approverMatch && itemMatch && datesMatch) {
         approvals.push({
-          state: 'Approved',
-          approver: match[1].trim(),
-          item: match[2].trim(),     
-          created: match[3],         
-          createdOriginal: match[4]   
+          state: stateMatch[1].trim(),
+          approver: approverMatch[1].trim(),
+          item: itemMatch[1].trim(),
+          created: datesMatch[1],
+          createdOriginal: datesMatch[2]
         });
       }
     });
