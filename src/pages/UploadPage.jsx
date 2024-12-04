@@ -5,7 +5,17 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { storage, auth, db } from '@/config/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { collection, addDoc } from 'firebase/firestore';
+import { 
+  collection, 
+  addDoc, 
+  getDoc, 
+  getDocs,
+  deleteDoc, 
+  doc, 
+  query, 
+  where, 
+  limit 
+} from 'firebase/firestore';
 import { PDFReader } from '@/utils/pdfReader';
 
 const UploadPage = () => {
@@ -45,6 +55,29 @@ const UploadPage = () => {
       setError('Please upload a PDF file');
     }
   };
+
+  // Add this function to test database connection
+const testDatabaseConnection = async () => {
+  try {
+    // Try to write a test document
+    const testDoc = await addDoc(collection(db, 'test_connection'), {
+      test: true,
+      timestamp: new Date().toISOString()
+    });
+    
+    // Try to read it back
+    const docSnap = await getDoc(doc(db, 'test_connection', testDoc.id));
+    
+    // Delete the test document
+    await deleteDoc(doc(db, 'test_connection', testDoc.id));
+    
+    console.log('Database connection successful!');
+    return true;
+  } catch (error) {
+    console.error('Database connection failed:', error);
+    return false;
+  }
+};
 
   // Process PDF file
 const processFile = async (file) => {
@@ -113,12 +146,17 @@ try {
   };
 
   // Handle form submission
-  const handleSubmit = async () => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
+const handleSubmit = async () => {
+  setLoading(true);
+  setError(null);
 
   try {
+    // Test database connection first
+    const isConnected = await testDatabaseConnection();
+    if (!isConnected) {
+      throw new Error('Unable to connect to database');
+    }
+
     // Check if we have any data to save
     if (!formData.requestNumber) {
       throw new Error('No request data to save');
@@ -150,16 +188,53 @@ try {
     
     console.log('Document saved with ID:', docRef.id);
 
-    // 4. Navigate to requests page or show success message
-    navigate('/requests');
+    // Show success popup
+    if (window.confirm('Request saved successfully! Click OK to refresh the page.')) {
+      window.location.reload();
+    } else {
+      navigate('/requests');
+    }
 
   } catch (error) {
     console.error('Error saving request:', error);
+    alert(`Error: ${error.message}`);
     setError(error.message || 'Failed to save request');
   } finally {
     setLoading(false);
   }
 };
+
+  // Add a function to check if data exists in database
+const checkExistingData = async () => {
+  try {
+    const q = query(
+      collection(db, 'requests'),
+      where('userId', '==', auth.currentUser.uid),
+      limit(1)
+    );
+    
+    const querySnapshot = await getDocs(q);
+    return !querySnapshot.empty;
+  } catch (error) {
+    console.error('Error checking existing data:', error);
+    return false;
+  }
+};
+
+  // Add useEffect to test database on component mount
+useEffect(() => {
+  const testConnection = async () => {
+    const isConnected = await testDatabaseConnection();
+    if (isConnected) {
+      console.log('Database connection ready');
+      // Check if we can read data
+      const hasData = await checkExistingData();
+      console.log('Existing data found:', hasData);
+    }
+  };
+  
+  testConnection();
+}, []);
 
   // Reset form
 const handleReset = () => {
