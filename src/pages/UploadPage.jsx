@@ -47,56 +47,60 @@ const UploadPage = () => {
   };
 
   // Process PDF file
-  const processFile = async (file) => {
-    setLoading(true);
-    setError(null);
-    try {
-      setFile(file);
-      const text = await PDFReader.readPDF(file);
+const processFile = async (file) => {
+  setLoading(true);
+  setError(null);
+  try {
+    setFile(file);
+    const text = await PDFReader.readPDF(file);
+    
+    console.log("Starting approval extraction");
 
-       console.log("Full PDF text:", text); // Log full text to see what we're working with
+    // New approach using string search
+    const approvals = [];
+    let searchText = text;
+    let startIndex = 0;
+    let count = 0;
 
+    while (count < 2) {  // Look for first two approvals only
+      // Find next occurrence of "Approved"
+      startIndex = searchText.indexOf('Approved', startIndex);
+      if (startIndex === -1) break;  // No more "Approved" found
 
-      // For table rows
-      const approvals = [];
-      const lines = text.split('\n');
-      console.log("All lines:", lines); // See how the text is split
-
+      // Get the full line containing "Approved"
+      const lineEnd = searchText.indexOf('\n', startIndex);
+      const line = searchText.substring(startIndex, lineEnd !== -1 ? lineEnd : undefined);
       
-      // Filter for approved lines
-      const approvedLines = lines
-        .filter(line => {
-          const isApproved = line.trim().startsWith('Approved');
-          console.log("Checking line:", line, "Is Approved:", isApproved);
-          return isApproved;
-        })
-        .slice(0, 2);
+      console.log("Found line:", line);
 
-      console.log("Found approved lines:", approvedLines);
-      
+      // Process line if it's an actual approval
+      if (line.includes('Approved')) {
+        try {
+          // Split by multiple spaces and filter out empty strings
+          const parts = line.split(/\s+/).filter(part => part.length > 0);
+          console.log("Line parts:", parts);
 
-      // Try a simpler pattern first
-      approvedLines.forEach((line, index) => {
-        console.log(`Processing approved line ${index}:`, line);
-        
-        // Simple pattern to split by multiple spaces
-        const parts = line.split(/\s{2,}/);
-        console.log("Line parts:", parts);
-
-        if (parts.length >= 4) {
-          const approval = {
-            state: 'Approved',
-            approver: parts[1], // After 'Approved'
-            item: parts[2],     // After approver
-            created: parts[3],  // First timestamp
-            createdOriginal: parts[4] || '' // Second timestamp if exists
-          };
-          console.log("Created approval object:", approval);
-          approvals.push(approval);
+          if (parts.length >= 5) {  // Ensure we have all required parts
+            const approval = {
+              state: parts[0],  // "Approved"
+              approver: parts[1] + ' ' + parts[2],  // Assuming two-word name
+              item: parts[3] + ' ' + parts[4],  // Assuming two-word item
+              created: parts[5] + ' ' + parts[6],  // Date and time
+              createdOriginal: parts[7] + ' ' + parts[8]  // Original date and time
+            };
+            console.log("Created approval:", approval);
+            approvals.push(approval);
+            count++;
+          }
+        } catch (err) {
+          console.log("Error processing line:", err);
         }
-      });
+      }
 
-      console.log("Final approvals array:", approvals);
+      startIndex = lineEnd || (startIndex + 1);  // Move to next line
+    }
+
+    console.log("Final approvals:", approvals);
       
       
       const data = {
@@ -113,16 +117,16 @@ const UploadPage = () => {
 
 
 
-            console.log("Final extracted data:", data);
-      setExtractedData(data);
-      setFormData(data);
-    } catch (error) {
-      console.error('Error processing PDF:', error);
-      setError('Failed to process PDF file');
-    } finally {
-      setLoading(false);
-    }
-  };
+    console.log("Final data:", data);
+    setExtractedData(data);
+    setFormData(data);
+  } catch (error) {
+    console.error('Error in processFile:', error);
+    setError('Failed to process PDF file');
+  } finally {
+    setLoading(false);
+  }
+};
 
   // Handle form input changes
   const handleInputChange = (e) => {
