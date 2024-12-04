@@ -54,21 +54,25 @@ const UploadPage = () => {
       setFile(file);
       const text = await PDFReader.readPDF(file);
 
-          // Extract approvals first
+    // Modified to only capture Approved states
     const approvals = [];
-    const approvalRegex = /Approved\s+([^\n]+)\s+Data Centre Access\s+(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})\s+(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})/g;
-    let match;
-    
-    while ((match = approvalRegex.exec(text)) !== null) {
-      approvals.push({
-        state: 'Approved',
-        approver: match[1].trim(),
-        item: 'Data Centre Access',
-        created: match[2],
-        createdOriginal: match[3]
-      });
-    }
+    // Look for lines that start with "Approved"
+    const approvedLines = text.split('\n')
+      .filter(line => line.trim().startsWith('Approved'))
+      .slice(0, 2); 
 
+    approvedLines.forEach(line => {
+      const match = line.match(/Approved\s+([^\n]+)\s+([^\n]+)\s+(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})\s+(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})/);
+      if (match) {
+        approvals.push({
+          state: 'Approved',
+          approver: match[1].trim(),
+          item: match[2].trim(),     
+          created: match[3],         
+          createdOriginal: match[4]   
+        });
+      }
+    });
       
       
       const data = {
@@ -79,7 +83,7 @@ const UploadPage = () => {
         description: text.match(/Description:\s*(.*?)\s*Approver:/s)?.[1]?.trim() || '',
         workNotes: text.match(/Work notes:\s*(.*?)\s*Additional comments:/s)?.[1]?.trim() || '',
         state: text.match(/State:\s*(.*?)\s*Priority:/s)?.[1]?.trim() || '',
-        approvals: approvals.slice(0, 2) 
+        approvals
  
       };
 
