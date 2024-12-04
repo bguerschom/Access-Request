@@ -59,17 +59,23 @@ const UploadPage = () => {
   // Add this function to test database connection
 const testDatabaseConnection = async () => {
   try {
-    // Try to write a test document
-    const testDoc = await addDoc(collection(db, 'test_connection'), {
+    // Try to write a test document to requests collection
+    const testData = {
+      userId: auth.currentUser.uid,
       test: true,
       timestamp: new Date().toISOString()
-    });
+    };
+
+        const testDoc = await addDoc(collection(db, 'requests'), testData);
+    console.log('Test write successful');
     
     // Try to read it back
-    const docSnap = await getDoc(doc(db, 'test_connection', testDoc.id));
+    const docSnap = await getDoc(doc(db, 'requests', testDoc.id));
+    console.log('Test read successful');
     
     // Delete the test document
-    await deleteDoc(doc(db, 'test_connection', testDoc.id));
+    await deleteDoc(doc(db, 'requests', testDoc.id));
+    console.log('Test delete successful');
     
     console.log('Database connection successful!');
     return true;
