@@ -15,13 +15,19 @@ const RequestUploader = () => {
     const file = event.target.files[0];
     if (!file) return;
 
+    if (file.type !== 'application/pdf') {
+      setError('Please upload a PDF file');
+      return;
+    }
+
     setUploading(true);
     setError(null);
 
     try {
       // Read the PDF file
       const text = await PDFReader.readPDF(file);
-      
+      console.log('Extracted text:', text); // For debugging
+
       // Parse the text content
       const details = pdfParser.extractRequestDetails(text);
       
@@ -37,7 +43,7 @@ const RequestUploader = () => {
       event.target.value = '';
     } catch (error) {
       console.error('Error processing file:', error);
-      setError('Failed to process the file. Please try again.');
+      setError(error.message || 'Failed to process the file. Please try again.');
     } finally {
       setUploading(false);
     }
@@ -53,12 +59,16 @@ const RequestUploader = () => {
           <div className="flex items-center space-x-4">
             <input
               type="file"
-              accept=".pdf"
+              accept="application/pdf"
               onChange={handleFileUpload}
               disabled={uploading}
               className="flex-1 p-2 border rounded"
             />
-            {uploading && <p className="text-sm text-gray-500">Processing...</p>}
+            {uploading && (
+              <div className="text-sm text-blue-500">
+                Processing PDF...
+              </div>
+            )}
           </div>
           
           {error && (
