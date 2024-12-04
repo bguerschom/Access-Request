@@ -6,17 +6,14 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      '@': path.resolve(__dirname, './src')
     }
-  },
-  optimizeDeps: {
-    include: ['pdfjs-dist/build/pdf.worker.entry']
   },
   build: {
     rollupOptions: {
       output: {
         manualChunks: {
-          pdfjs: ['pdfjs-dist']
+          pdfjsLib: ['pdfjs-dist']
         }
       }
     }
