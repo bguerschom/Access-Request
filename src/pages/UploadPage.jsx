@@ -55,33 +55,28 @@ try {
     console.log("Starting approval extraction");
 
     const approvals = [];
-    // Pattern to match: Approved + Name + Item + Two Timestamps
+    // Basic pattern for finding Approved entries
     const approvalPattern = /Approved\s+([^\d]+?)\s+((?:Data|Switch|Access)[^\d]+?)\s+(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})\s+(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})/g;
 
-    let matches = [];
+    let foundApprovals = [];
     let match;
-    
-    // Collect all matches first
+
+    // Find all matches first
     while ((match = approvalPattern.exec(text)) !== null) {
-        matches.push(match);
-    }
-
-    console.log("Total matches found:", matches.length);
-
-    // Take second and third matches (index 1 and 2)
-    for (let i = 1; i <= 2; i++) {
-        if (matches[i]) {
-            const approval = {
+        // Skip if it contains header text
+        if (!match[1].includes('State') && !match[1].includes('Comments')) {
+            foundApprovals.push({
                 state: 'Approved',
-                approver: matches[i][1].trim(),
-                item: matches[i][2].trim(),
-                created: matches[i][3],
-                createdOriginal: matches[i][4]
-            };
-            console.log(`Adding approval ${i}:`, approval);
-            approvals.push(approval);
+                approver: match[1].trim(),
+                item: match[2].trim(),
+                created: match[3],
+                createdOriginal: match[4]
+            });
         }
     }
+
+    // Take first two valid approvals found
+    approvals.push(...foundApprovals.slice(0, 2));
 
     console.log("Final approvals:", approvals);
       
