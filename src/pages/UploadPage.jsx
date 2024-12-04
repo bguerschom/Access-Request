@@ -427,6 +427,25 @@ const handleReset = () => {
         </CardContent>
       </Card>
     </div>
+
+        {/* Footer */}
+    <footer className="bg-[#0A2647] text-white py-4 mt-auto">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center space-x-2">
+            <span className="font-medium">Bigue-Creation</span>
+            <span className="text-sm text-gray-300">|</span>
+            <span className="text-sm">Access Request System</span>
+          </div>
+          <div className="flex items-center space-x-4 text-sm">
+            <a href="#" className="hover:text-gray-300">Contact</a>
+            <a href="#" className="hover:text-gray-300">About</a>
+            <span>© {new Date().getFullYear()}</span>
+          </div>
+        </div>
+      </div>
+    </footer>
+  </div>
   );
 };
 
