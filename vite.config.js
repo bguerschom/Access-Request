@@ -7,9 +7,18 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
-      '@components': path.resolve(__dirname, './src/components'),
-      '@config': path.resolve(__dirname, './src/config'),
-      '@services': path.resolve(__dirname, './src/services')
+    }
+  },
+  optimizeDeps: {
+    include: ['pdfjs-dist/build/pdf.worker.entry']
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          pdfjs: ['pdfjs-dist']
+        }
+      }
     }
   }
 })
