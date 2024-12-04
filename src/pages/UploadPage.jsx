@@ -118,15 +118,21 @@ try {
     setLoading(true);
     setError(null);
 
-try {
-    if (!file) {
-      throw new Error('No file selected');
+  try {
+    // Check if we have any data to save
+    if (!formData.requestNumber) {
+      throw new Error('No request data to save');
     }
 
-    // 1. Upload PDF to Firebase Storage
-    const storageRef = ref(storage, `pdfs/${auth.currentUser.uid}/${Date.now()}_${file.name}`);
-    await uploadBytes(storageRef, file);
-    const fileUrl = await getDownloadURL(storageRef);
+        let fileUrl = null;
+    
+    // Only try to upload if there's a file
+    if (file) {
+      // Upload PDF to Firebase Storage
+      const storageRef = ref(storage, `pdfs/${auth.currentUser.uid}/${Date.now()}_${file.name}`);
+      await uploadBytes(storageRef, file);
+      fileUrl = await getDownloadURL(storageRef);
+    }
 
     // 2. Prepare data for Firestore
     const requestData = {
@@ -387,38 +393,6 @@ const handleReset = () => {
       ))}
     </div>
   </div>
-
-
-<div className="mt-8 pt-6 border-t">
-  <div className="flex items-center justify-between mb-2">
-    <label className="block text-sm font-medium text-gray-700">
-      Uploaded PDF Document
-    </label>
-  </div>
-  
-  <div className="bg-gray-50 rounded-lg p-4">
-    {file ? (
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <FileText className="h-6 w-6 text-[#0A2647]" />
-          <span className="text-sm text-gray-600">{file.name}</span>
-        </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setFile(null)}
-          className="text-red-600 hover:text-red-700"
-        >
-          Remove
-        </Button>
-      </div>
-    ) : (
-      <div className="text-sm text-gray-500 text-center py-2">
-        No PDF file uploaded
-      </div>
-    )}
-  </div>
-</div>
               
               
               {error && (
@@ -464,22 +438,7 @@ const handleReset = () => {
 
       );
 
-    <footer className="bg-[#0A2647] text-white py-4 mt-auto">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center">
-          <div className="flex items-center space-x-2">
-            <span className="font-medium">Bigue-Creation</span>
-            <span className="text-sm text-gray-300">|</span>
-            <span className="text-sm">Access Request System</span>
-          </div>
-          <div className="flex items-center space-x-4 text-sm">
-            <a href="#" className="hover:text-gray-300">Contact</a>
-            <a href="#" className="hover:text-gray-300">About</a>
-            <span>© {new Date().getFullYear()}</span>
-          </div>
-        </div>
-      </div>
-    </footer>
+
 };
 
 export default UploadPage;
