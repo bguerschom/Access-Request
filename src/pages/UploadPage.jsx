@@ -55,29 +55,29 @@ try {
     console.log("Starting approval extraction");
 
     const approvals = [];
-
-    // Find pattern: "Approved" followed by details, multiple times
-    const approvalPattern = /Approved\s+([^\d]+)\s+([^\d]+)\s+(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})\s+(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})/g;
+    // Pattern to match: Approved + Name + Item + Two Timestamps
+    const approvalPattern = /Approved\s+([^\d]+?)\s+((?:Data|Switch|Access)[^\d]+?)\s+(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})\s+(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})/g;
 
     let match;
-    let skipFirst = true;
-    while ((match = approvalPattern.exec(text)) !== null) {
-        if (skipFirst) {
-            skipFirst = false;
+    let matchCount = 0;
+    
+    while ((match = approvalPattern.exec(text)) !== null && matchCount < 2) {
+        if (matchCount === 0) {
+            matchCount++;
             continue; // Skip first match
         }
 
-        if (approvals.length >= 2) break; // Only take 2 entries
-
-        console.log("Found match:", match);
-
-        approvals.push({
+        const approval = {
             state: 'Approved',
             approver: match[1].trim(),
             item: match[2].trim(),
             created: match[3],
             createdOriginal: match[4]
-        });
+        };
+
+        console.log("Found approval:", approval);
+        approvals.push(approval);
+        matchCount++;
     }
 
     console.log("Final approvals:", approvals);
@@ -95,9 +95,6 @@ try {
  
       };
 
-
-
-    console.log("Final data:", data);
     setExtractedData(data);
     setFormData(data);
   } catch (error) {
