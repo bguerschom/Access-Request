@@ -118,31 +118,42 @@ try {
     setLoading(true);
     setError(null);
 
-    try {
-      // Upload PDF to Firebase Storage
-      const storageRef = ref(storage, `pdfs/${auth.currentUser.uid}/${Date.now()}_${file.name}`);
-      await uploadBytes(storageRef, file);
-      const fileUrl = await getDownloadURL(storageRef);
-
-      // Save data to Firestore
-      await addDoc(collection(db, 'requests'), {
-        ...formData,
-        fileUrl,
-        fileName: file.name,
-        userId: auth.currentUser.uid,
-        createdAt: new Date().toISOString(),
-        originalData: extractedData
-      });
-
-      // Navigate to requests page
-      navigate('/requests');
-    } catch (error) {
-      console.error('Error saving request:', error);
-      setError('Failed to save request. Please try again.');
-    } finally {
-      setLoading(false);
+try {
+    if (!file) {
+      throw new Error('No file selected');
     }
-  };
+
+    // 1. Upload PDF to Firebase Storage
+    const storageRef = ref(storage, `pdfs/${auth.currentUser.uid}/${Date.now()}_${file.name}`);
+    await uploadBytes(storageRef, file);
+    const fileUrl = await getDownloadURL(storageRef);
+
+    // 2. Prepare data for Firestore
+    const requestData = {
+      ...formData,
+      fileUrl,
+      fileName: file.name,
+      userId: auth.currentUser.uid,
+      createdAt: new Date().toISOString(),
+      status: 'pending', // You can add status tracking
+      uploadedBy: auth.currentUser.email
+    };
+
+    // 3. Save to Firestore
+    const docRef = await addDoc(collection(db, 'requests'), requestData);
+    
+    console.log('Document saved with ID:', docRef.id);
+
+    // 4. Navigate to requests page or show success message
+    navigate('/requests');
+
+  } catch (error) {
+    console.error('Error saving request:', error);
+    setError(error.message || 'Failed to save request');
+  } finally {
+    setLoading(false);
+  }
+};
 
   // Reset form
 const handleReset = () => {
