@@ -59,54 +59,45 @@ const processFile = async (file) => {
     let startIndex = 0;
     let count = 0;
     let foundFirst = false;
+     
+    // Find all lines containing 'Approved'
+    const lines = text.split('\n')
+      .filter(line => line.includes('Approved'))
+      .map(line => line.trim());
 
-    while (count < 2) {
-      startIndex = searchText.indexOf('Approved', startIndex);
-      if (startIndex === -1) break;
+    console.log("Found approved lines:", lines);
 
-      const lineEnd = searchText.indexOf('\n', startIndex);
-      const line = searchText.substring(startIndex, lineEnd !== -1 ? lineEnd : undefined);
-      
-      if (line.includes('Approved')) {
-        if (!foundFirst) {
-          // Skip the first "Approved" line
-          foundFirst = true;
-          startIndex = lineEnd || (startIndex + 1);
-          continue;
-        }
-
+    // Get second and third lines (index 1 and 2)
+    for (let i = 1; i < 3; i++) {
+      const line = lines[i];
+      if (line) {
         try {
-                    // Split by 'Approved' first to isolate the rest
+          // Split by 'Approved' first
           const [_, rest] = line.split('Approved');
           if (rest) {
-                        // Find the timestamps which have consistent format
+            // Find the timestamps
             const timeMatch = rest.match(/(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})\s+(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})/);
             if (timeMatch) {
-                            // Everything between approver and timestamps is the item
+              // Get content before timestamps
               const beforeTimes = rest.split(timeMatch[1])[0].trim();
-              // Extract approver (first two words) and item (remaining words)
-              const parts = beforeTimes.trim().split(/\s+/);
-              const approver = parts.slice(0, 2).join(' ');
-              const item = parts.slice(2).join(' ');
-            
+              // Get approver (first two words) and item (rest)
+              const words = beforeTimes.trim().split(/\s+/);
+              const approver = words.slice(0, 2).join(' ');
+              const item = words.slice(2).join(' ');
 
-              const approval = {
+              approvals.push({
                 state: 'Approved',
                 approver: approver.trim(),
                 item: item.trim(),
                 created: timeMatch[1],
                 createdOriginal: timeMatch[2]
-              };
-              console.log("Created approval:", approval);
-              approvals.push(approval);
-              count++;
+              });
             }
           }
         } catch (err) {
           console.log("Error processing line:", err);
         }
       }
-      startIndex = lineEnd || (startIndex + 1);
     }
 
     console.log("Final approvals:", approvals);
