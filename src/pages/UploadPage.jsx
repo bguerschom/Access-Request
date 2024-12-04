@@ -52,6 +52,23 @@ const UploadPage = () => {
     try {
       setFile(file);
       const text = await PDFReader.readPDF(file);
+
+          // Extract approvals first
+    const approvals = [];
+    const approvalRegex = /Approved\s+([^\n]+)\s+Data Centre Access\s+(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})\s+(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})/g;
+    let match;
+    
+    while ((match = approvalRegex.exec(text)) !== null) {
+      approvals.push({
+        state: 'Approved',
+        approver: match[1].trim(),
+        item: 'Data Centre Access',
+        created: match[2],
+        createdOriginal: match[3]
+      });
+    }
+
+      
       
       const data = {
         requestNumber: text.match(/Number:\s*(RITM\d+)/)?.[1] || '',
@@ -60,17 +77,15 @@ const UploadPage = () => {
         shortDescription: text.match(/Short description:\s*(.*?)\s*Description:/s)?.[1]?.trim() || '',
         description: text.match(/Description:\s*(.*?)\s*Approver:/s)?.[1]?.trim() || '',
         workNotes: text.match(/Work notes:\s*(.*?)\s*Additional comments:/s)?.[1]?.trim() || '',
-        state: text.match(/State:\s*(.*?)\s*Priority:/s)?.[1]?.trim() || ''
+        state: text.match(/State:\s*(.*?)\s*Priority:/s)?.[1]?.trim() || '',
 
 
-
+    // Add approvals array to your data
+      approvals: approvals.slice(0, 2) // Only keep first two approvals
  
       };
 
-          // Clean the requestedFor field by removing the prefix if it's still there
-    if (data.requestedFor.startsWith('Request Requested for:')) {
-      data.requestedFor = data.requestedFor.replace('Request Requested for:', '').trim();
-    }
+
 
       setExtractedData(data);
       setFormData(data);
