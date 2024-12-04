@@ -387,6 +387,40 @@ const handleReset = () => {
       ))}
     </div>
   </div>
+
+
+<div className="mt-8 pt-6 border-t">
+  <div className="flex items-center justify-between mb-2">
+    <label className="block text-sm font-medium text-gray-700">
+      Uploaded PDF Document
+    </label>
+  </div>
+  
+  <div className="bg-gray-50 rounded-lg p-4">
+    {file ? (
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <FileText className="h-6 w-6 text-[#0A2647]" />
+          <span className="text-sm text-gray-600">{file.name}</span>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setFile(null)}
+          className="text-red-600 hover:text-red-700"
+        >
+          Remove
+        </Button>
+      </div>
+    ) : (
+      <div className="text-sm text-gray-500 text-center py-2">
+        No PDF file uploaded
+      </div>
+    )}
+  </div>
+</div>
+              
+              
               {error && (
                 <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md flex items-center">
                   <AlertCircle className="w-4 h-4 mr-2" />
@@ -428,7 +462,6 @@ const handleReset = () => {
       </Card>
     </div>
 
-        {/* Footer */}
     <footer className="bg-[#0A2647] text-white py-4 mt-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center">
