@@ -54,30 +54,49 @@ const UploadPage = () => {
       setFile(file);
       const text = await PDFReader.readPDF(file);
 
-    // Modified to only capture Approved states
-    const approvals = [];
-    // Look for lines that start with "Approved"
-    const approvedLines = text.split('\n')
-      .filter(line => line.trim().startsWith('Approved'))
-      .slice(0, 2); 
+       console.log("Full PDF text:", text); // Log full text to see what we're working with
 
-    approvedLines.forEach(line => {
-      // Extract values between their respective labels
-      const stateMatch = line.match(/^(Approved)/);
-      const approverMatch = line.match(/Approved\s+(.*?)\s+(?=Data|Switch|Access)/);
-      const itemMatch = line.match(/(?<=Approved\s+[\w\s]+\s+)(.*?)(?=\s+\d{4}-\d{2}-\d{2})/);
-      const datesMatch = line.match(/(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})\s+(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})/);
 
-      if (stateMatch && approverMatch && itemMatch && datesMatch) {
-        approvals.push({
-          state: stateMatch[1].trim(),
-          approver: approverMatch[1].trim(),
-          item: itemMatch[1].trim(),
-          created: datesMatch[1],
-          createdOriginal: datesMatch[2]
-        });
-      }
-    });
+      // For table rows
+      const approvals = [];
+      const lines = text.split('\n');
+      console.log("All lines:", lines); // See how the text is split
+
+      
+      // Filter for approved lines
+      const approvedLines = lines
+        .filter(line => {
+          const isApproved = line.trim().startsWith('Approved');
+          console.log("Checking line:", line, "Is Approved:", isApproved);
+          return isApproved;
+        })
+        .slice(0, 2);
+
+      console.log("Found approved lines:", approvedLines);
+      
+
+      // Try a simpler pattern first
+      approvedLines.forEach((line, index) => {
+        console.log(`Processing approved line ${index}:`, line);
+        
+        // Simple pattern to split by multiple spaces
+        const parts = line.split(/\s{2,}/);
+        console.log("Line parts:", parts);
+
+        if (parts.length >= 4) {
+          const approval = {
+            state: 'Approved',
+            approver: parts[1], // After 'Approved'
+            item: parts[2],     // After approver
+            created: parts[3],  // First timestamp
+            createdOriginal: parts[4] || '' // Second timestamp if exists
+          };
+          console.log("Created approval object:", approval);
+          approvals.push(approval);
+        }
+      });
+
+      console.log("Final approvals array:", approvals);
       
       
       const data = {
@@ -94,6 +113,7 @@ const UploadPage = () => {
 
 
 
+            console.log("Final extracted data:", data);
       setExtractedData(data);
       setFormData(data);
     } catch (error) {
