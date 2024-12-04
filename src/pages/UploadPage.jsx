@@ -55,7 +55,7 @@ const UploadPage = () => {
       
       const data = {
         requestNumber: text.match(/Number:\s*(RITM\d+)/)?.[1] || '',
-        requestedFor: text.match(/Request Requested for:\s*([^\n]+)/)?.[1] || '',
+        requestedFor: text.match(/Request Requested for:\s*(.*?)\s*Company:/s)?.[1]?.trim() || '',
         updatedToOpen: text.match(/Updated to open:\s*([^\n]+)/)?.[1] || '',
         shortDescription: text.match(/Short description:\s*([^\n]+)/)?.[1] || '',
         description: text.match(/Description:\s*([^\n]+)/)?.[1] || '',
