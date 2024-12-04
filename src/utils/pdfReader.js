@@ -1,15 +1,25 @@
 // src/utils/pdfReader.js
 import * as pdfjsLib from 'pdfjs-dist';
-import { GlobalWorkerOptions } from 'pdfjs-dist/build/pdf';
+import worker from 'pdfjs-dist/build/pdf.worker.entry';
 
-// Set worker path - this is required
-GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+// Set worker locally
+pdfjsLib.GlobalWorkerOptions.workerSrc = worker;
 
 export class PDFReader {
   static async readPDF(file) {
     try {
-      const arrayBuffer = await file.arrayBuffer();
-      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      // Convert file to ArrayBuffer
+      const arrayBuffer = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsArrayBuffer(file);
+      });
+
+      // Load the PDF document
+      const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+      const pdf = await loadingTask.promise;
+      
       let fullText = '';
 
       // Get total pages
@@ -26,7 +36,7 @@ export class PDFReader {
       return fullText;
     } catch (error) {
       console.error('Error reading PDF:', error);
-      throw new Error('Failed to read PDF file');
+      throw new Error('Failed to read PDF file: ' + error.message);
     }
   }
 }
