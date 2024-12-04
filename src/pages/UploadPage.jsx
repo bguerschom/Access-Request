@@ -195,11 +195,8 @@ const handleSubmit = async () => {
     console.log('Document saved with ID:', docRef.id);
 
     // Show success popup
-    if (window.confirm('Request saved successfully! Click OK to refresh the page.')) {
-      window.location.reload();
-    } else {
-      navigate('/requests');
-    }
+alert('Request saved successfully!');
+window.location.reload();
 
   } catch (error) {
     console.error('Error saving request:', error);
