@@ -76,17 +76,31 @@ const processFile = async (file) => {
         }
 
         try {
-          const parts = line.split(/\s+/).filter(part => part.length > 0);
-          if (parts.length >= 5) {
-            const approval = {
-              state: parts[0],
-              approver: parts[1] + ' ' + parts[2],
-              item: parts[3] + ' ' + parts[4],
-              created: parts[5] + ' ' + parts[6],
-              createdOriginal: parts[7] + ' ' + parts[8]
-            };
-            approvals.push(approval);
-            count++;
+                    // Split by 'Approved' first to isolate the rest
+          const [_, rest] = line.split('Approved');
+          if (rest) {
+                        // Find the timestamps which have consistent format
+            const timeMatch = rest.match(/(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})\s+(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})/);
+            if (timeMatch) {
+                            // Everything between approver and timestamps is the item
+              const beforeTimes = rest.split(timeMatch[1])[0].trim();
+              // Extract approver (first two words) and item (remaining words)
+              const parts = beforeTimes.trim().split(/\s+/);
+              const approver = parts.slice(0, 2).join(' ');
+              const item = parts.slice(2).join(' ');
+            
+
+              const approval = {
+                state: 'Approved',
+                approver: approver.trim(),
+                item: item.trim(),
+                created: timeMatch[1],
+                createdOriginal: timeMatch[2]
+              };
+              console.log("Created approval:", approval);
+              approvals.push(approval);
+              count++;
+            }
           }
         } catch (err) {
           console.log("Error processing line:", err);
