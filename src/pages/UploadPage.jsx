@@ -63,6 +63,11 @@ const UploadPage = () => {
         state: text.match(/State:\s*([^\n]+)/)?.[1] || ''
       };
 
+          // Clean the requestedFor field by removing the prefix if it's still there
+    if (data.requestedFor.startsWith('Request Requested for:')) {
+      data.requestedFor = data.requestedFor.replace('Request Requested for:', '').trim();
+    }
+
       setExtractedData(data);
       setFormData(data);
     } catch (error) {
