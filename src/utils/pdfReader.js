@@ -1,9 +1,11 @@
 // src/utils/pdfReader.js
 import * as pdfjsLib from 'pdfjs-dist';
-import worker from 'pdfjs-dist/build/pdf.worker.entry';
 
-// Set worker locally
-pdfjsLib.GlobalWorkerOptions.workerSrc = worker;
+// Configure worker
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.min.js',
+  import.meta.url
+).toString();
 
 export class PDFReader {
   static async readPDF(file) {
