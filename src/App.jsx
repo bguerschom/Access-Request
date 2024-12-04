@@ -1,6 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import AuthForm from './components/auth/AuthForm';
-import UploadFormPage from './pages/UploadFormPage';
+import UploadFormPage from './pages/UploadPage';
 import RequestsPage from './pages/RequestsPage';
 import Layout from './components/layout/Layout';
 import AuthGuard from './components/auth/AuthGuard';
