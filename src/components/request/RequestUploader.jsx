@@ -1,15 +1,23 @@
-// src/components/request/RequestUploader.jsx
 import { useState } from 'react';
 import { PDFReader } from '@/utils/pdfReader';
 import { pdfParser } from '@/utils/pdfParser';
 import { requestService } from '@/services/requests';
-import { auth } from '@/config/firebase';
+import { storage, auth } from '@/config/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Upload, AlertCircle } from 'lucide-react';
 
 const RequestUploader = () => {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState(null);
+  const [progress, setProgress] = useState(0);
+
+  const uploadFile = async (file) => {
+    const storageRef = ref(storage, `pdfs/${auth.currentUser.uid}/${Date.now()}_${file.name}`);
+    await uploadBytes(storageRef, file);
+    return await getDownloadURL(storageRef);
+  };
 
   const handleFileUpload = async (event) => {
     const file = event.target.files[0];
@@ -22,37 +30,47 @@ const RequestUploader = () => {
 
     setUploading(true);
     setError(null);
+    setProgress(0);
 
     try {
-      // Read the PDF file
+      // Upload file to storage
+      setProgress(20);
+      const fileUrl = await uploadFile(file);
+      
+      // Read and parse PDF
+      setProgress(40);
       const text = await PDFReader.readPDF(file);
-      console.log('Extracted text:', text); // For debugging
-
-      // Parse the text content
+      setProgress(60);
       const details = pdfParser.extractRequestDetails(text);
       
-      // Add metadata and save to Firestore
+      // Save to Firestore
+      setProgress(80);
       await requestService.create({
         ...details,
         userId: auth.currentUser.uid,
         uploadedAt: new Date().toISOString(),
-        fileName: file.name
+        fileName: file.name,
+        fileUrl
       });
 
-      // Clear the input
+      setProgress(100);
       event.target.value = '';
     } catch (error) {
       console.error('Error processing file:', error);
       setError(error.message || 'Failed to process the file. Please try again.');
     } finally {
       setUploading(false);
+      setTimeout(() => setProgress(0), 1000);
     }
   };
 
   return (
-    <Card>
+    <Card className="mb-6">
       <CardHeader>
-        <CardTitle>Upload Request PDF</CardTitle>
+        <CardTitle className="flex items-center space-x-2">
+          <Upload className="w-5 h-5" />
+          <span>Upload Request PDF</span>
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
@@ -62,18 +80,23 @@ const RequestUploader = () => {
               accept="application/pdf"
               onChange={handleFileUpload}
               disabled={uploading}
-              className="flex-1 p-2 border rounded"
+              className="flex-1 p-2 border rounded focus:outline-none focus:ring-2 focus:ring-[#0A2647] focus:border-transparent"
             />
-            {uploading && (
-              <div className="text-sm text-blue-500">
-                Processing PDF...
-              </div>
-            )}
           </div>
           
+          {progress > 0 && (
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div
+                className="bg-[#0A2647] h-2 rounded-full transition-all duration-300"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          )}
+          
           {error && (
-            <div className="text-sm text-red-500 bg-red-50 p-3 rounded">
-              {error}
+            <div className="flex items-center space-x-2 text-sm text-red-500 bg-red-50 p-3 rounded">
+              <AlertCircle className="w-4 h-4" />
+              <span>{error}</span>
             </div>
           )}
         </div>
