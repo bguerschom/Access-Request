@@ -1,8 +1,8 @@
-import React from 'react'
-import { Routes, Route } from 'react-router-dom'
-import AuthForm from './components/auth/AuthForm'
-import RequestViewer from './components/request/RequestViewer'
-import AuthGuard from './components/auth/AuthGuard'
+// src/App.jsx
+import { Routes, Route } from 'react-router-dom';
+import AuthForm from './components/auth/AuthForm';
+import Dashboard from './components/request/Dashboard';
+import AuthGuard from './components/auth/AuthGuard';
 
 function App() {
   return (
@@ -10,11 +10,11 @@ function App() {
       <Route path="/auth" element={<AuthForm />} />
       <Route path="/" element={
         <AuthGuard>
-          <RequestViewer />
+          <Dashboard />
         </AuthGuard>
       } />
     </Routes>
-  )
+  );
 }
 
-export default App
+export default App;
