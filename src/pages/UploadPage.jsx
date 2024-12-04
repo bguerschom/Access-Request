@@ -480,7 +480,6 @@ const handleReset = () => {
         </div>
       </div>
     </footer>
-  );
 };
 
 export default UploadPage;
