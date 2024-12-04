@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import { Upload, FileText } from 'lucide-react';
 
-export const Sidebar = () => {
+export const Sidebar = ({ isOpen = true }) => {  // Add isOpen prop with default value
   const navItems = [
     {
       path: '/upload',
@@ -15,7 +15,7 @@ export const Sidebar = () => {
     }
   ];
 
-return (
+  return (
     <aside className={`
       fixed inset-y-0 left-0 z-50
       w-64 bg-white dark:bg-gray-800 shadow-lg
@@ -44,3 +44,5 @@ return (
     </aside>
   );
 };
+
+export default Sidebar;
