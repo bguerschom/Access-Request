@@ -1,8 +1,7 @@
-// src/components/layout/Sidebar.jsx
 import { NavLink } from 'react-router-dom';
 import { Upload, FileText } from 'lucide-react';
 
-const Sidebar = () => {
+export const Sidebar = () => {
   const navItems = [
     {
       path: '/upload',
@@ -39,5 +38,3 @@ const Sidebar = () => {
     </aside>
   );
 };
-
-export default Layout;
