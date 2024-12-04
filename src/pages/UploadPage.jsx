@@ -413,7 +413,7 @@ const handleReset = () => {
                   Reset
                 </Button>
                 <Button
-                  type="submit"
+                   onClick={handleSubmit}
                   disabled={loading}
                   className="bg-[#0A2647]"
                 >
