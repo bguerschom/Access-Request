@@ -25,6 +25,44 @@ const RequestsPage = () => {
     try {
       const snapshot = await getDocs(collection(db, 'requests'));
       const currentDate = new Date();
+
+          // Get all non-expired requests
+    let filteredRequests = snapshot.docs
+      .map(doc => ({ id: doc.id, ...doc.data() }))
+      .filter(req => {
+        const endDate = new Date(req.accessEndDate);
+        return endDate >= currentDate;
+      });
+
+          // Apply search if exists
+    if (searchTerm) {
+      filteredRequests = filteredRequests.filter(req => 
+        req.requestNumber?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+          // Apply status filter
+    if (statusFilter === 'active') {
+      filteredRequests = filteredRequests.filter(req => !req.checkedIn);
+    } else if (statusFilter === 'checked') {
+      filteredRequests = filteredRequests.filter(req => req.checkedIn);
+    }
+
+    setRequests(filteredRequests);
+  } catch (error) {
+    console.error('Error fetching requests:', error);
+  } finally {
+    setLoading(false);
+  }
+};
+
+  // Add function to calculate remaining days
+const getRemainingDays = (endDate) => {
+  const end = new Date(endDate);
+  const today = new Date();
+  const diffTime = end - today;
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  return diffDays;
+};
       
       // Get all requests and filter based on expiration
       const allRequests = snapshot.docs
@@ -130,36 +168,53 @@ const RequestsPage = () => {
         </CardHeader>
         <CardContent>
           <div className="grid gap-4">
-            {requests.map((request) => (
-              <div key={request.id} className="border rounded-lg p-4">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="font-medium">{request.requestNumber}</h3>
-                    <p className="text-sm text-gray-600">{request.requestedFor}</p>
-                    <div className="mt-2 text-sm">
-                      <p>Access Period: {new Date(request.accessStartDate).toLocaleDateString()} - {new Date(request.accessEndDate).toLocaleDateString()}</p>
-                      <p>Description: {request.description}</p>
-                    </div>
-                  </div>
-                  <Button
-                    onClick={() => handleCheckInClick(request.id)}
-                    className="bg-green-600 hover:bg-green-700"
-                  >
-                    <CheckCircle className="w-4 h-4 mr-2" />
-                    Check In
-                  </Button>
-                </div>
+{requests.map((request) => (
+  <div key={request.id} className="border rounded-lg p-4">
+    <div className="flex justify-between items-start">
+      <div>
+        <div className="flex items-center space-x-2">
+          <h3 className="font-medium">{request.requestNumber}</h3>
+          {request.checkedIn && (
+            <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
+              Checked In
+            </span>
+          )}
+        </div>
+        <p className="text-sm text-gray-600">{request.requestedFor}</p>
+        <div className="mt-2 text-sm space-y-2">
+          <div className="flex items-center">
+            <Calendar className="w-4 h-4 mr-2 text-gray-500" />
+            <span>
+              Access Period: {new Date(request.accessStartDate).toLocaleDateString()} - {new Date(request.accessEndDate).toLocaleDateString()}
+            </span>
+            <span className="ml-2 text-orange-600 font-medium">
+              ({getRemainingDays(request.accessEndDate)} days remaining)
+            </span>
+          </div>
+          <p>Description: {request.description}</p>
+        </div>
+      </div>
+      {!request.checkedIn && (
+        <Button
+          onClick={() => handleCheckInClick(request.id)}
+          className="bg-green-600 hover:bg-green-700"
+        >
+          <CheckCircle className="w-4 h-4 mr-2" />
+          Check In
+        </Button>
+      )}
+    </div>
 
-                {request.checkInHistory && request.checkInHistory.length > 0 && (
-                  <div className="mt-4">
-                    <h4 className="font-medium mb-2">Check-in History</h4>
-                    <div className="space-y-2">
-                      {request.checkInHistory.map((checkIn, index) => (
-                        <div key={index} className="text-sm bg-gray-50 p-2 rounded">
-                          <p>Visitor: {checkIn.name} (ID: {checkIn.idNumber})</p>
-                          <p>Checked in: {new Date(checkIn.checkInTime).toLocaleString()}</p>
-                          <p>Verified by: {checkIn.checkedBy}</p>
-                        </div>
+    {request.checkInHistory && request.checkInHistory.length > 0 && (
+      <div className="mt-4">
+        <h4 className="font-medium mb-2">Check-in History</h4>
+        <div className="space-y-2">
+          {request.checkInHistory.map((checkIn, index) => (
+            <div key={index} className="text-sm bg-gray-50 p-2 rounded">
+              <p>Visitor: {checkIn.name} (ID: {checkIn.idNumber})</p>
+              <p>Checked in: {new Date(checkIn.checkInTime).toLocaleString()}</p>
+              <p>Verified by: {checkIn.checkedBy}</p>
+            </div>
                       ))}
                     </div>
                   </div>
