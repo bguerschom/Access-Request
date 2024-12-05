@@ -12,7 +12,7 @@ function App() {
 <Routes>
   <Route path="/auth" element={<AuthForm />} />
   <Route path="/" element={<AuthGuard><Layout /></AuthGuard>}>
-    <Route path="upload" element={<UploadPage />} />
+    <Route path="upload" element={<UploadFormPage />} />
     <Route path="requests" element={<RequestsPage />} />
     <Route path="users" element={<UserManagement />} />
     <Route path="reports" element={<Reports />} />
