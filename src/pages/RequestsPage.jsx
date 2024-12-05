@@ -1,96 +1,110 @@
 // src/pages/RequestsPage.jsx
-import React, { useEffect, useState } from 'react';
-import { collection, query, where, orderBy, onSnapshot } from 'firebase/firestore';
-import { db, auth } from '@/config/firebase';
+import { useState, useEffect } from 'react';
+import { collection, getDocs, updateDoc, doc } from 'firebase/firestore';
+import { db } from '@/config/firebase';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { FileText, ExternalLink } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Search, Clock, CheckCircle } from 'lucide-react';
 
 const RequestsPage = () => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const q = query(
-      collection(db, 'requests'),
-      where('userId', '==', auth.currentUser.uid),
-      orderBy('createdAt', 'desc')
-    );
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const requestsData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setRequests(requestsData);
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
+    fetchActiveRequests();
   }, []);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0A2647]" />
-      </div>
-    );
-  }
+  const fetchActiveRequests = async () => {
+    const snapshot = await getDocs(collection(db, 'requests'));
+    const currentDate = new Date();
+    
+    const activeRequests = snapshot.docs
+      .map(doc => ({ id: doc.id, ...doc.data() }))
+      .filter(req => {
+        const endDate = new Date(req.accessEndDate);
+        return endDate >= currentDate;
+      });
+
+    setRequests(activeRequests);
+    setLoading(false);
+  };
+
+  const handleArrival = async (requestId) => {
+    const arrivalInfo = {
+      visitorName: prompt('Visitor Name:'),
+      visitorId: prompt('Visitor ID:'),
+      arrivalTime: new Date().toISOString(),
+      checkedBy: auth.currentUser.email
+    };
+
+    await updateDoc(doc(db, 'requests', requestId), {
+      arrivals: arrayUnion(arrivalInfo)
+    });
+
+    fetchActiveRequests();
+  };
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
-      <h1 className="text-2xl font-bold text-[#0A2647] mb-6">Access Requests</h1>
-
-      <div className="grid gap-6 md:grid-cols-2">
-        {requests.map(request => (
-          <Card key={request.id} className="hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <CardTitle className="flex justify-between items-center">
-                <span>{request.requestNumber}</span>
-                <a
-                  href={request.fileUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-[#0A2647] hover:underline flex items-center"
-                >
-                  <FileText className="w-4 h-4 mr-1" />
-                  View PDF
-                  <ExternalLink className="w-3 h-3 ml-1" />
-                </a>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-2 text-sm">
+    <div className="p-6">
+      <Card>
+        <CardHeader>
+          <div className="flex justify-between items-center">
+            <CardTitle>Active Access Requests</CardTitle>
+            <div className="flex space-x-4">
+              <input
+                type="text"
+                placeholder="Search requests..."
+                className="px-4 py-2 border rounded-md"
+              />
+              <select className="border rounded-md px-4">
+                <option value="all">All Status</option>
+                <option value="pending">Pending Arrival</option>
+                <option value="checked">Checked In</option>
+              </select>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4">
+            {requests.map((request) => (
+              <div key={request.id} className="border rounded-lg p-4">
+                <div className="flex justify-between items-start">
                   <div>
-                    <span className="font-medium text-gray-600">Requested For:</span>
-                    <p>{request.requestedFor}</p>
+                    <h3 className="font-medium">{request.requestNumber}</h3>
+                    <p className="text-sm text-gray-600">{request.requestedFor}</p>
+                    <div className="mt-2 text-sm">
+                      <p>Access Period: {new Date(request.accessStartDate).toLocaleDateString()} - {new Date(request.accessEndDate).toLocaleDateString()}</p>
+                      <p>Description: {request.description}</p>
+                    </div>
                   </div>
-                  <div>
-                    <span className="font-medium text-gray-600">State:</span>
-                    <p>{request.state}</p>
-                  </div>
+                  <Button
+                    onClick={() => handleArrival(request.id)}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    Record Arrival
+                  </Button>
                 </div>
 
-                <div>
-                  <span className="font-medium text-gray-600">Description:</span>
-                  <p className="text-sm mt-1">{request.description}</p>
-                </div>
-
-                {request.workNotes && (
-                  <div>
-                    <span className="font-medium text-gray-600">Work Notes:</span>
-                    <p className="text-sm mt-1">{request.workNotes}</p>
+                {request.arrivals && request.arrivals.length > 0 && (
+                  <div className="mt-4">
+                    <h4 className="font-medium mb-2">Arrival Records</h4>
+                    <div className="space-y-2">
+                      {request.arrivals.map((arrival, index) => (
+                        <div key={index} className="text-sm bg-gray-50 p-2 rounded">
+                          <p>Visitor: {arrival.visitorName} (ID: {arrival.visitorId})</p>
+                          <p>Checked in: {new Date(arrival.arrivalTime).toLocaleString()}</p>
+                          <p>Verified by: {arrival.checkedBy}</p>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
-
-                <div className="text-xs text-gray-500">
-                  Uploaded on: {new Date(request.createdAt).toLocaleString()}
-                </div>
               </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
