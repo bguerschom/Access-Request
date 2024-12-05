@@ -6,6 +6,31 @@ import { Upload, CheckCircle, ClipboardList, Users, FileText } from 'lucide-reac
 
 const Dashboard = () => {
   const [recentActivity, setRecentActivity] = useState([]);
+
+  useEffect(() => {
+  fetchRecentActivities();
+}, []);
+
+  const fetchRecentActivities = async () => {
+  try {
+    const activitiesRef = collection(db, 'activities');
+    const q = query(
+      activitiesRef,
+      orderBy('timestamp', 'desc'),
+      limit(5)  // Get only last 5 activities
+    );
+    
+    const snapshot = await getDocs(q);
+    const activities = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    
+    setRecentActivity(activities);
+  } catch (error) {
+    console.error('Error fetching activities:', error);
+  }
+};
   
   // Format email to show only name
   const userName = auth.currentUser?.email.split('@')[0]
