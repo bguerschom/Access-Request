@@ -19,7 +19,7 @@ const RequestsPage = () => {
  const fetchRequests = async () => {
    try {
      const snapshot = await getDocs(collection(db, 'requests'));
-     const currentDate = new Date();
+     const currentDate = new Date().getTime(); // Convert to timestamp
 
      // Get all non-expired requests
      const allRequests = snapshot.docs
@@ -29,29 +29,35 @@ const RequestsPage = () => {
          return endDate >= currentDate;
        });
 
-     // Apply status filter
-     let filteredRequests = allRequests;
-     if (statusFilter === 'active') {
-       filteredRequests = allRequests.filter(req => !req.checkedIn);
-     } else if (statusFilter === 'checked') {
-       filteredRequests = allRequests.filter(req => req.checkedIn);
-     }
+    // Apply status filters
+    let filteredRequests;
+    switch (statusFilter) {
+      case 'active':
+        // Show requests that are not expired and not checked in
+        filteredRequests = allRequests.filter(req => 
+          !req.checkInHistory || req.checkInHistory.length === 0
+        );
+        break;
+      case 'checked':
+        // Show requests that are not expired but have been checked in
+        filteredRequests = allRequests.filter(req => 
+          req.checkInHistory && req.checkInHistory.length > 0
+        );
+        break;
+      default:
+        // Show all non-expired requests
+        filteredRequests = allRequests;
+    }
 
-     // Apply search filter
-     if (searchTerm) {
-       filteredRequests = filteredRequests.filter(req => 
-         req.requestNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-         req.requestedFor?.toLowerCase().includes(searchTerm.toLowerCase())
-       );
-     }
+    console.log('Current Date:', currentDate);
+    console.log('All Requests:', allRequests);
+    console.log('Filtered Requests:', filteredRequests);
 
-     setRequests(filteredRequests);
-   } catch (error) {
-     console.error('Error fetching requests:', error);
-   } finally {
-     setLoading(false);
-   }
- };
+    setRequests(filteredRequests);
+  } catch (error) {
+    console.error('Error fetching requests:', error);
+  }
+};
 
  const handleCheckIn = async (requestId) => {
    const checkInInfo = {
