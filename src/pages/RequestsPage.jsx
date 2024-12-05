@@ -14,9 +14,51 @@ const RequestsPage = () => {
     fetchActiveRequests();
   }, []);
 
-  const fetchActiveRequests = async () => {
+  const [statusFilter, setStatusFilter] = useState('all');
+const [requests, setRequests] = useState([]);
+
+const fetchActiveRequests = async () => {
+  try {
     const snapshot = await getDocs(collection(db, 'requests'));
     const currentDate = new Date();
+    // Filter requests based on date and arrival status
+    const allRequests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+      .filter(req => {
+        const endDate = new Date(req.accessEndDate);
+        return endDate >= currentDate; // Only show non-expired requests
+      });
+
+    // Apply status filter
+    const filteredRequests = allRequests.filter(req => {
+      switch(statusFilter) {
+        case 'active':
+          return !req.arrivals; // No arrivals recorded yet
+        case 'checked':
+          return req.arrivals && req.arrivals.length > 0;
+        default:
+          return true; // Show all non-expired requests
+      }
+    });
+
+    setRequests(filteredRequests);
+  } catch (error) {
+    console.error('Error fetching requests:', error);
+  }
+};
+
+// Filter dropdown in JSX
+  <select 
+  value={statusFilter} 
+  onChange={(e) => setStatusFilter(e.target.value)} 
+  className="border rounded-md px-4"
+>
+  <option value="all">All Active Requests</option>
+  <option value="active">Not Checked In</option>
+  <option value="checked">Checked In</option>
+</select>
+
+
+    
     
     const activeRequests = snapshot.docs
       .map(doc => ({ id: doc.id, ...doc.data() }))
