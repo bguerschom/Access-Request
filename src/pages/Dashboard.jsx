@@ -16,8 +16,8 @@ const Dashboard = () => {
     .join(' ');
 
   useEffect(() => {
-  fetchRecentActivities();
-}, []);
+    fetchRecentRequests();
+  }, []);
 
   const fetchRecentRequests = async () => {
     try {
