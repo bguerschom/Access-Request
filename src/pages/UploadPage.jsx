@@ -31,6 +31,8 @@ const UploadPage = () => {
     shortDescription: '',
     description: '',
     workNotes: '',
+    accessStartDate: '',
+    accessEndDate: '',
     state: '',
     approvals: [] 
   });
@@ -179,15 +181,18 @@ const handleSubmit = async () => {
     }
 
     // 2. Prepare data for Firestore
-    const requestData = {
-      ...formData,
-      fileUrl,
-      fileName: file ? file.name : null,
-      userId: auth.currentUser.uid,
-      createdAt: new Date().toISOString(),
-      status: 'pending',
-      uploadedBy: auth.currentUser.email
-    };
+const requestData = {
+  ...formData,
+  fileUrl,
+  fileName: file ? file.name : null,
+  accessStartDate: formData.accessStartDate,
+  accessEndDate: formData.accessEndDate,
+  userId: auth.currentUser.uid,
+  createdAt: new Date().toISOString(),
+  status: 'pending',
+  uploadedBy: auth.currentUser.email
+};
+delete requestData.workNotes;
 
     // 3. Save to Firestore
     const docRef = await addDoc(collection(db, 'requests'), requestData);
@@ -356,18 +361,47 @@ const handleReset = () => {
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Work Notes
-                </label>
-                <textarea
-                  name="workNotes"
-                  value={formData.workNotes}
-                  onChange={handleInputChange}
-                  rows={2}
-                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-[#0A2647] focus:ring-[#0A2647]"
-                />
-              </div>
+<div>
+  <label className="block text-sm font-medium text-gray-700 mb-1">
+    Work Notes (View Only)
+  </label>
+  <textarea
+    name="workNotes"
+    value={formData.workNotes}
+    readOnly
+    rows={2}
+    className="w-full rounded-md border-gray-300 bg-gray-50"
+  />
+</div>
+
+<div className="grid grid-cols-2 gap-4 mt-4">
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-1">
+      Access Start Date
+    </label>
+    <input
+      type="date"
+      name="accessStartDate"
+      value={formData.accessStartDate}
+      onChange={(e) => setFormData({ ...formData, accessStartDate: e.target.value })}
+      className="w-full rounded-md border-gray-300"
+      required
+    />
+  </div>
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-1">
+      Access End Date
+    </label>
+    <input
+      type="date"
+      name="accessEndDate"
+      value={formData.accessEndDate}
+      onChange={(e) => setFormData({ ...formData, accessEndDate: e.target.value })}
+      className="w-full rounded-md border-gray-300"
+      required
+    />
+  </div>
+</div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
