@@ -7,7 +7,7 @@ import { Upload, CheckCircle, ClipboardList, Users, FileText } from 'lucide-reac
 
 
 const Dashboard = () => {
-  const [recentActivity, setRecentActivity] = useState([]);
+  const [recentRequests, setRecentRequests] = useState([]);
 
     // Format email to show only name
   const userName = auth.currentUser?.email.split('@')[0]
