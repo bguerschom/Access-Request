@@ -9,13 +9,16 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src')
     }
   },
-  build: {
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          pdfjsLib: ['pdfjs-dist']
-        }
+build: {
+  rollupOptions: {
+    output: {
+      globals: {
+        recharts: 'Recharts'
+      },
+      manualChunks: {
+        pdfjsLib: ['pdfjs-dist']
       }
     }
   }
+}
 })
