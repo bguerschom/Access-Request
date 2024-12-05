@@ -19,6 +19,11 @@ export const Sidebar = ({ isOpen = true }) => {  // Add isOpen prop with default
       label: 'View Requests'
     },
     {
+      path: '/users',
+      icon: <Users size={20} />,
+      label: 'User Management'
+    },
+    {
       path: '/reports',
       icon: <BarChart2 size={20} />,
       label: 'Reports'
