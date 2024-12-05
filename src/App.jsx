@@ -1,10 +1,15 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
 import AuthForm from './components/auth/AuthForm';
-import UploadFormPage from './pages/UploadPage';
+import UploadPage from './pages/UploadPage';
 import RequestsPage from './pages/RequestsPage';
 import Layout from './components/layout/Layout';
 import AuthGuard from './components/auth/AuthGuard';
+import UserManagement from './pages/UserManagement';
+import Reports from './pages/Reports';
+import Dashboard from './pages/Dashboard';
+
+
 
 function App() {
   return (
@@ -12,11 +17,12 @@ function App() {
 <Routes>
   <Route path="/auth" element={<AuthForm />} />
   <Route path="/" element={<AuthGuard><Layout /></AuthGuard>}>
-    <Route path="upload" element={<UploadFormPage />} />
+    <Route path="dashboard" element={<Dashboard />} />
+    <Route path="upload" element={<UploadPage />} />
     <Route path="requests" element={<RequestsPage />} />
-    <Route path="users" element={<UserManagement />} />
     <Route path="reports" element={<Reports />} />
-    <Route index element={<Navigate to="/upload" replace />} />
+    <Route path="users" element={<UserManagement />} />
+    <Route index element={<Navigate to="/dashboard" replace />} />
   </Route>
 </Routes>
               </ThemeProvider>
