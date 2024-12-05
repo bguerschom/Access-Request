@@ -25,7 +25,7 @@ const Dashboard = () => {
       const q = query(
         requestsRef,
         orderBy('createdAt', 'desc'),
-        limit(5)
+        limit(3)
       );
       
       const snapshot = await getDocs(q);
