@@ -64,21 +64,6 @@ const getRemainingDays = (endDate) => {
   return diffDays;
 };
       
-      // Get all requests and filter based on expiration
-      const allRequests = snapshot.docs
-        .map(doc => ({ id: doc.id, ...doc.data() }))
-        .filter(req => {
-          const endDate = new Date(req.accessEndDate);
-          return endDate >= currentDate;
-        });
-
-      setRequests(allRequests);
-    } catch (error) {
-      console.error('Error fetching requests:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleCheckInClick = (requestId) => {
     setSelectedRequestId(requestId);
