@@ -13,7 +13,8 @@ build: {
   rollupOptions: {
     output: {
       globals: {
-        recharts: 'Recharts'
+        recharts: 'Recharts',
+        xlsx: 'XLSX'
       },
       manualChunks: {
         pdfjsLib: ['pdfjs-dist']
