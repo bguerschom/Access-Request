@@ -1,8 +1,13 @@
 import { NavLink } from 'react-router-dom';
-import { Upload, FileText } from 'lucide-react';
+import { Upload, FileText, Home, BarChart2, Users, Settings, HelpCircle } from 'lucide-react';
 
 export const Sidebar = ({ isOpen = true }) => {  // Add isOpen prop with default value
   const navItems = [
+    {
+      path: '/dashboard',
+      icon: <Home size={20} />,
+      label: 'Dashboard'
+    },
     {
       path: '/upload',
       icon: <Upload size={20} />,
@@ -12,9 +17,13 @@ export const Sidebar = ({ isOpen = true }) => {  // Add isOpen prop with default
       path: '/requests',
       icon: <FileText size={20} />,
       label: 'View Requests'
+    },
+    {
+      path: '/reports',
+      icon: <BarChart2 size={20} />,
+      label: 'Reports'
     }
   ];
-
   return (
     <aside className={`
       fixed inset-y-0 left-0 z-50
