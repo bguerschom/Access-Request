@@ -1,63 +1,71 @@
 // src/pages/RequestsPage.jsx
 import { useState, useEffect } from 'react';
-import { collection, getDocs, updateDoc, doc, arrayUnion } from 'firebase/firestore';
+import { collection, getDocs, updateDoc, doc, arrayUnion, where, query } from 'firebase/firestore';
 import { db, auth } from '@/config/firebase';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Search, CheckCircle, Calendar } from 'lucide-react';
 
 const RequestsPage = () => {
- const [requests, setRequests] = useState([]);
- const [loading, setLoading] = useState(true);
- const [statusFilter, setStatusFilter] = useState('all');
- const [searchTerm, setSearchTerm] = useState('');
+  const [requests, setRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
 
- useEffect(() => {
-   fetchRequests();
- }, [statusFilter]);
+  const fetchRequests = async () => {
+    try {
+      // Basic query to get all requests
+      const q = query(collection(db, 'requests'));
+      const querySnapshot = await getDocs(q);
+      
+      // Log the raw data
+      console.log('Raw data:', querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      
+      if (querySnapshot.empty) {
+        console.log('No requests found');
+        setRequests([]);
+        setLoading(false);
+        return;
+      }
 
- const fetchRequests = async () => {
-   try {
-     const snapshot = await getDocs(collection(db, 'requests'));
-     const currentDate = new Date().getTime(); // Convert to timestamp
+      const currentDate = new Date();
+      let filteredRequests = querySnapshot.docs
+        .map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }))
+        .filter(req => {
+          // Only include requests that have dates
+          if (!req.accessEndDate) {
+            console.log('Request missing end date:', req);
+            return false;
+          }
+          
+          const endDate = new Date(req.accessEndDate);
+          return endDate >= currentDate;
+        });
 
-     // Get all non-expired requests
-     const allRequests = snapshot.docs
-       .map(doc => ({ id: doc.id, ...doc.data() }))
-       .filter(req => {
-         const endDate = new Date(req.accessEndDate);
-         return endDate >= currentDate;
-       });
+      console.log('Filtered by date:', filteredRequests);
 
-    // Apply status filters
-    let filteredRequests;
-    switch (statusFilter) {
-      case 'active':
-        // Show requests that are not expired and not checked in
-        filteredRequests = allRequests.filter(req => 
-          !req.checkInHistory || req.checkInHistory.length === 0
-        );
-        break;
-      case 'checked':
-        // Show requests that are not expired but have been checked in
-        filteredRequests = allRequests.filter(req => 
-          req.checkInHistory && req.checkInHistory.length > 0
-        );
-        break;
-      default:
-        // Show all non-expired requests
-        filteredRequests = allRequests;
+      // Apply status filter
+      if (statusFilter === 'active') {
+        filteredRequests = filteredRequests.filter(req => !req.checkInHistory?.length);
+      } else if (statusFilter === 'checked') {
+        filteredRequests = filteredRequests.filter(req => req.checkInHistory?.length > 0);
+      }
+
+      console.log('Final filtered requests:', filteredRequests);
+      setRequests(filteredRequests);
+    } catch (error) {
+      console.error('Fetch error:', error);
+    } finally {
+      setLoading(false);
     }
+  };
 
-    console.log('Current Date:', currentDate);
-    console.log('All Requests:', allRequests);
-    console.log('Filtered Requests:', filteredRequests);
-
-    setRequests(filteredRequests);
-  } catch (error) {
-    console.error('Error fetching requests:', error);
-  }
-};
+  useEffect(() => {
+    fetchRequests();
+  }, [statusFilter]);
 
  const handleCheckIn = async (requestId) => {
    const checkInInfo = {
