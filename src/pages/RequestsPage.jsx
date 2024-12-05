@@ -179,15 +179,14 @@ const getRemainingDays = (endDate) => {
           <p>Description: {request.description}</p>
         </div>
       </div>
-      {!request.checkedIn && (
-        <Button
-          onClick={() => handleCheckInClick(request.id)}
-          className="bg-green-600 hover:bg-green-700"
-        >
-          <CheckCircle className="w-4 h-4 mr-2" />
-          Check In
-        </Button>
-      )}
+      {/* Remove conditional rendering for the button */}
+      <Button
+        onClick={() => handleCheckInClick(request.id)}
+        className="bg-green-600 hover:bg-green-700"
+      >
+        <CheckCircle className="w-4 h-4 mr-2" />
+        Check In
+      </Button>
     </div>
 
     {request.checkInHistory && request.checkInHistory.length > 0 && (
