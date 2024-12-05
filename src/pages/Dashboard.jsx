@@ -9,37 +9,39 @@ import { Upload, CheckCircle, ClipboardList, Users, FileText } from 'lucide-reac
 const Dashboard = () => {
   const [recentActivity, setRecentActivity] = useState([]);
 
-  useEffect(() => {
-  fetchRecentActivities();
-}, []);
-
-  const fetchRecentActivities = async () => {
-  try {
-    const activitiesRef = collection(db, 'activities');
-    const q = query(
-      activitiesRef,
-      orderBy('timestamp', 'desc'),
-      limit(5)  // Get only last 5 activities
-    );
-    
-    const snapshot = await getDocs(q);
-    const activities = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
-
-    console.log('Fetched activities:', activities);
-    setRecentActivity(activities);
-  } catch (error) {
-    console.error('Error fetching activities:', error);
-  }
-};
-  
-  // Format email to show only name
+    // Format email to show only name
   const userName = auth.currentUser?.email.split('@')[0]
     .split('.')
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');
+
+  useEffect(() => {
+  fetchRecentActivities();
+}, []);
+
+  const fetchRecentRequests = async () => {
+    try {
+      const requestsRef = collection(db, 'requests');
+      const q = query(
+        requestsRef,
+        orderBy('createdAt', 'desc'),
+        limit(5)
+      );
+      
+      const snapshot = await getDocs(q);
+      const requests = snapshot.docs.map(doc => ({
+        id: doc.id,
+        requestNumber: doc.data().requestNumber,
+        createdAt: doc.data().createdAt
+      }));
+      
+      setRecentRequests(requests);
+    } catch (error) {
+      console.error('Error fetching recent requests:', error);
+    }
+  };
+  
+
 
   return (
     <div className="p-6">
@@ -105,32 +107,31 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Recent Activity */}
+        {/* Recent Requests */}
         <Card>
           <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
+            <CardTitle>Recent Requests</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {recentActivity.map((activity, index) => (
-                <div key={index} className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg animate-fade-in">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                    activity.type === 'check-in' ? 'bg-green-100' : 'bg-blue-100'
-                  }`}>
-                    {activity.type === 'check-in' ? (
-                      <CheckCircle className="w-5 h-5 text-green-600" />
-                    ) : (
-                      <FileText className="w-5 h-5 text-blue-600" />
-                    )}
+              {recentRequests.map((request) => (
+                <div key={request.id} className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg animate-fade-in">
+                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                    <FileText className="w-5 h-5 text-blue-600" />
                   </div>
                   <div>
-                    <p className="font-medium">{activity.description}</p>
+                    <p className="font-medium">{request.requestNumber}</p>
                     <p className="text-sm text-gray-500">
-                      {new Date(activity.timestamp).toLocaleString()}
+                      {new Date(request.createdAt).toLocaleDateString()}
                     </p>
                   </div>
                 </div>
               ))}
+              {recentRequests.length === 0 && (
+                <div className="text-center text-gray-500 py-4">
+                  No recent requests found
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
