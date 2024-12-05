@@ -1,8 +1,10 @@
 // src/pages/Dashboard.jsx
 import { useState, useEffect } from 'react';
+import { collection, query, getDocs, orderBy, limit } from 'firebase/firestore';  // Add these imports
+import { db, auth } from '@/config/firebase';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { auth } from '@/config/firebase';
 import { Upload, CheckCircle, ClipboardList, Users, FileText } from 'lucide-react';
+
 
 const Dashboard = () => {
   const [recentActivity, setRecentActivity] = useState([]);
@@ -25,7 +27,8 @@ const Dashboard = () => {
       id: doc.id,
       ...doc.data()
     }));
-    
+
+    console.log('Fetched activities:', activities);
     setRecentActivity(activities);
   } catch (error) {
     console.error('Error fetching activities:', error);
