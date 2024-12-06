@@ -20,13 +20,13 @@ export const Header = () => {
   return (
     <header className="bg-white dark:bg-gray-800 shadow-sm w-full fixed top-0 z-50">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between items-center h-12">
           {/* Left Side: Logo */}
           <div className="flex items-center">
             <img 
               src="/logo.png" 
               alt="Logo" 
-              className="h-8 w-auto"
+              className="h-6 w-auto" // Adjusted height of logo to match reduced header height
             />
           </div>
 
@@ -39,16 +39,16 @@ export const Header = () => {
               onClick={toggleTheme}
             >
               {theme === 'dark' ? (
-                <Sun className="h-5 w-5" />
+                <Sun className="h-4 w-4" />
               ) : (
-                <Moon className="h-5 w-5" />
+                <Moon className="h-4 w-4" />
               )}
             </Button>
 
             {/* User Info */}
             <div className="hidden sm:flex items-center text-sm text-gray-600 dark:text-gray-300">
-              <User className="h-4 w-4 mr-2" />
-              <span>{auth.currentUser?.email}</span>
+              <User className="h-4 w-4 mr-1" />
+              <span className="text-xs">{auth.currentUser?.email}</span> {/* Smaller text size */}
             </div>
 
             {/* Logout */}
@@ -58,7 +58,7 @@ export const Header = () => {
               onClick={handleLogout}
               className="text-gray-600 dark:text-gray-300 hover:text-red-600"
             >
-              <LogOut className="h-4 w-4 mr-2" />
+              <LogOut className="h-4 w-4 mr-1" />
               Logout
             </Button>
           </div>
