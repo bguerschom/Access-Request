@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { collection, query, getDocs } from 'firebase/firestore';
 import { db } from '@/config/firebase';
@@ -25,51 +24,52 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { useAuth } from '@/hooks/useAuth';
 
-
-
-// Export Modal Component
-const ExportModal = () => {
+const ExportModal = ({
+  showDateModal,
+  setShowDateModal,
+  dateRange,
+  setDateRange,
+  selectedExportType,
+  handleExport
+}) => {
   if (!showDateModal) return null;
- 
 
   return (
-   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-     <div className="bg-white rounded-lg p-6 w-96">
-       <h3 className="text-lg font-semibold mb-4">Select Date Range</h3>
-       <div className="space-y-4">
-         <div>
-           <label className="block text-sm mb-1">Start Date</label>
-           <input
-             type="date"
-             value={dateRange.startDate}
-             onChange={(e) => setDateRange(prev => ({...prev, startDate: e.target.value}))}
-             className="w-full border rounded p-2"
-           />
-         </div>
-         <div>
-           <label className="block text-sm mb-1">End Date</label>
-           <input
-             type="date"
-             value={dateRange.endDate}
-             onChange={(e) => setDateRange(prev => ({...prev, endDate: e.target.value}))}
-             className="w-full border rounded p-2"
-           />
-         </div>
-         <div className="flex justify-end space-x-3 mt-6">
-           <Button variant="outline" onClick={() => setShowDateModal(false)}>
-             Cancel
-           </Button>
-           <Button onClick={handleExport}>
-             Export
-           </Button>
-         </div>
-       </div>
-     </div>
-   </div>
- );
- };
-
-
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 w-96">
+        <h3 className="text-lg font-semibold mb-4">Select Date Range</h3>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm mb-1">Start Date</label>
+            <input
+              type="date"
+              value={dateRange.startDate}
+              onChange={(e) => setDateRange(prev => ({...prev, startDate: e.target.value}))}
+              className="w-full border rounded p-2"
+            />
+          </div>
+          <div>
+            <label className="block text-sm mb-1">End Date</label>
+            <input
+              type="date"
+              value={dateRange.endDate}
+              onChange={(e) => setDateRange(prev => ({...prev, endDate: e.target.value}))}
+              className="w-full border rounded p-2"
+            />
+          </div>
+          <div className="flex justify-end space-x-3 mt-6">
+            <Button variant="outline" onClick={() => setShowDateModal(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleExport}>
+              Export
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const Reports = () => {
   const { userData } = useAuth();
@@ -87,15 +87,14 @@ const Reports = () => {
     expired: 0,
     checkedIn: 0
   });
-
-const [showDateModal, setShowDateModal] = useState(false);
-const [selectedExportType, setSelectedExportType] = useState(null);
-const [dateRange, setDateRange] = useState({
+  const [showDateModal, setShowDateModal] = useState(false);
+  const [selectedExportType, setSelectedExportType] = useState(null);
+  const [dateRange, setDateRange] = useState({
     startDate: '',
     endDate: ''
-   });
+  });
 
-    const canExport = () => {
+  const canExport = () => {
     return userData?.role === 'admin' || userData?.role === 'user';
   };
 
@@ -135,139 +134,139 @@ const [dateRange, setDateRange] = useState({
     setSummaryStats(stats);
   };
 
-const getFilteredData = () => {
-  return requests.filter(req => {
-    // Date range filter
-    const matchesDateRange = !dateRange.startDate || !dateRange.endDate || (
-      new Date(req.accessStartDate) >= new Date(dateRange.startDate) &&
-      new Date(req.accessStartDate) <= new Date(dateRange.endDate)
-    );
+  const getFilteredData = () => {
+    return requests.filter(req => {
+      // Date range filter
+      const matchesDateRange = !dateRange.startDate || !dateRange.endDate || (
+        new Date(req.accessStartDate) >= new Date(dateRange.startDate) &&
+        new Date(req.accessStartDate) <= new Date(dateRange.endDate)
+      );
 
-    // Status filter
-    const endDate = new Date(req.accessEndDate);
-    const currentDate = new Date();
-    const isActive = endDate >= currentDate;
-    const matchesStatus = 
-      filters.status === 'all' ? true :
-      filters.status === 'active' ? isActive :
-      filters.status === 'expired' ? !isActive :
-      filters.status === 'checkedIn' ? req.checkedIn : true;
+      // Status filter
+      const endDate = new Date(req.accessEndDate);
+      const currentDate = new Date();
+      const isActive = endDate >= currentDate;
+      const matchesStatus = 
+        filters.status === 'all' ? true :
+        filters.status === 'active' ? isActive :
+        filters.status === 'expired' ? !isActive :
+        filters.status === 'checkedIn' ? req.checkedIn : true;
 
-    // Requestor filter
-    const matchesRequestor = 
-      filters.requestedBy === 'all' ? true :
-      req.requestedFor === filters.requestedBy;
+      // Requestor filter
+      const matchesRequestor = 
+        filters.requestedBy === 'all' ? true :
+        req.requestedFor === filters.requestedBy;
 
-    // Search filter
-    const matchesSearch = 
-      filters.searchTerm === '' ? true :
-      req.requestNumber.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
-      req.requestedFor.toLowerCase().includes(filters.searchTerm.toLowerCase());
+      // Search filter
+      const matchesSearch = 
+        filters.searchTerm === '' ? true :
+        req.requestNumber.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
+        req.requestedFor.toLowerCase().includes(filters.searchTerm.toLowerCase());
 
-    return matchesDateRange && matchesStatus && matchesRequestor && matchesSearch;
-  });
-};
-
-const exportToExcel = () => {
-   const filteredData = getFilteredData();
-  const exportData = requests.map(req => ({
-    'Request Number': req.requestNumber,
-    'Requested For': req.requestedFor,
-    'Start Date': new Date(req.accessStartDate).toLocaleDateString(),
-    'End Date': new Date(req.accessEndDate).toLocaleDateString(),
-    'Status': new Date(req.accessEndDate) >= new Date() ? 'Active' : 'Expired',
-    'Description': req.description,
-    'Total Check-ins': req.checkInHistory?.length || 0,
-    'Last Check-in': req.checkInHistory?.length ? 
-      new Date(req.checkInHistory[req.checkInHistory.length - 1].checkInTime).toLocaleString() : 'N/A',
-    'Check-in Details': req.checkInHistory?.map(ch => 
-      `${ch.name} (ID: ${ch.idNumber}) - ${new Date(ch.checkInTime).toLocaleString()}`
-    ).join('; ') || 'No check-ins',
-    'Created By': req.uploadedBy,
-    'Created Date': new Date(req.createdAt).toLocaleDateString(),
-    'Access Duration (Days)': Math.ceil((new Date(req.accessEndDate) - new Date(req.accessStartDate)) / (1000 * 60 * 60 * 24)),
-    'Remaining Days': Math.ceil((new Date(req.accessEndDate) - new Date()) / (1000 * 60 * 60 * 24))
-  }));
-
-  const ws = XLSX.utils.json_to_sheet(exportData);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Access Requests');
-  XLSX.writeFile(wb, `access_requests_report_${new Date().toISOString().split('T')[0]}.xlsx`);
-};
-
-const exportToPDF = () => {
-  const filteredData = getFilteredData();
-  const doc = new jsPDF();
-  
-  // Add Title and Header
-  doc.setFontSize(20);
-  doc.setTextColor(10, 38, 71);
-  doc.text('Access Request Report', 15, 20);
-  
-  // Add Summary Statistics
-  doc.setFontSize(12);
-  doc.setTextColor(0, 0, 0);
-  doc.text([
-    `Generated: ${new Date().toLocaleString()}`,
-    `Total Requests: ${summaryStats.total}`,
-    `Active Requests: ${summaryStats.active}`,
-    `Expired Requests: ${summaryStats.expired}`,
-    `Total Check-ins: ${requests.reduce((sum, req) => sum + (req.checkInHistory?.length || 0), 0)}`
-  ], 15, 35);
-
-  // Add Bar Chart
-  const chartData = getChartData();
-  const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d');
-  // Create chart using canvas
-  // Convert to image and add to PDF
-  const chartImg = canvas.toDataURL('image/png');
-  doc.addImage(chartImg, 'PNG', 15, 80, 180, 100);
-
-  // Add Request Table
-  doc.autoTable({
-    startY: 190,
-    head: [[
-      'Request #',
-      'Requested For',
-      'Status',
-      'Access Period',
-      'Check-ins'
-    ]],
-    body: requests.map(req => [
-      req.requestNumber,
-      req.requestedFor,
-      new Date(req.accessEndDate) >= new Date() ? 'Active' : 'Expired',
-      `${new Date(req.accessStartDate).toLocaleDateString()} - ${new Date(req.accessEndDate).toLocaleDateString()}`,
-      req.checkInHistory?.length || 0
-    ]),
-    styles: { fontSize: 8 },
-    headStyles: { fillColor: [10, 38, 71] }
-  });
-
-  // Add Check-in Details
-  const requestsWithCheckins = requests.filter(req => req.checkInHistory?.length > 0);
-  if (requestsWithCheckins.length > 0) {
-    doc.addPage();
-    doc.text('Check-in Details', 15, 20);
-    
-    requestsWithCheckins.forEach((req, index) => {
-      doc.autoTable({
-        startY: index === 0 ? 30 : doc.lastAutoTable.finalY + 10,
-        head: [[`Request ${req.requestNumber} - ${req.requestedFor}`]],
-        body: req.checkInHistory.map(ch => [[
-          `Visitor: ${ch.name}`,
-          `ID: ${ch.idNumber}`,
-          `Time: ${new Date(ch.checkInTime).toLocaleString()}`,
-          `Verified by: ${ch.checkedBy}`
-        ].join(' | ')]),
-        styles: { fontSize: 8 }
-      });
+      return matchesDateRange && matchesStatus && matchesRequestor && matchesSearch;
     });
-  }
+  };
 
-  doc.save(`access_requests_report_${new Date().toISOString().split('T')[0]}.pdf`);
-};
+  const exportToExcel = () => {
+    const filteredData = getFilteredData();
+    const exportData = requests.map(req => ({
+      'Request Number': req.requestNumber,
+      'Requested For': req.requestedFor,
+      'Start Date': new Date(req.accessStartDate).toLocaleDateString(),
+      'End Date': new Date(req.accessEndDate).toLocaleDateString(),
+      'Status': new Date(req.accessEndDate) >= new Date() ? 'Active' : 'Expired',
+      'Description': req.description,
+      'Total Check-ins': req.checkInHistory?.length || 0,
+      'Last Check-in': req.checkInHistory?.length ? 
+        new Date(req.checkInHistory[req.checkInHistory.length - 1].checkInTime).toLocaleString() : 'N/A',
+      'Check-in Details': req.checkInHistory?.map(ch => 
+        `${ch.name} (ID: ${ch.idNumber}) - ${new Date(ch.checkInTime).toLocaleString()}`
+      ).join('; ') || 'No check-ins',
+      'Created By': req.uploadedBy,
+      'Created Date': new Date(req.createdAt).toLocaleDateString(),
+      'Access Duration (Days)': Math.ceil((new Date(req.accessEndDate) - new Date(req.accessStartDate)) / (1000 * 60 * 60 * 24)),
+      'Remaining Days': Math.ceil((new Date(req.accessEndDate) - new Date()) / (1000 * 60 * 60 * 24))
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Access Requests');
+    XLSX.writeFile(wb, `access_requests_report_${new Date().toISOString().split('T')[0]}.xlsx`);
+  };
+
+  const exportToPDF = () => {
+    const filteredData = getFilteredData();
+    const doc = new jsPDF();
+    
+    // Add Title and Header
+    doc.setFontSize(20);
+    doc.setTextColor(10, 38, 71);
+    doc.text('Access Request Report', 15, 20);
+    
+    // Add Summary Statistics
+    doc.setFontSize(12);
+    doc.setTextColor(0, 0, 0);
+    doc.text([
+      `Generated: ${new Date().toLocaleString()}`,
+      `Total Requests: ${summaryStats.total}`,
+      `Active Requests: ${summaryStats.active}`,
+      `Expired Requests: ${summaryStats.expired}`,
+      `Total Check-ins: ${requests.reduce((sum, req) => sum + (req.checkInHistory?.length || 0), 0)}`
+    ], 15, 35);
+
+    // Add Bar Chart
+    const chartData = getChartData();
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    // Create chart using canvas
+    // Convert to image and add to PDF
+    const chartImg = canvas.toDataURL('image/png');
+    doc.addImage(chartImg, 'PNG', 15, 80, 180, 100);
+
+    // Add Request Table
+    doc.autoTable({
+      startY: 190,
+      head: [[
+        'Request #',
+        'Requested For',
+        'Status',
+        'Access Period',
+        'Check-ins'
+      ]],
+      body: requests.map(req => [
+        req.requestNumber,
+        req.requestedFor,
+        new Date(req.accessEndDate) >= new Date() ? 'Active' : 'Expired',
+        `${new Date(req.accessStartDate).toLocaleDateString()} - ${new Date(req.accessEndDate).toLocaleDateString()}`,
+        req.checkInHistory?.length || 0
+      ]),
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [10, 38, 71] }
+    });
+
+    // Add Check-in Details
+    const requestsWithCheckins = requests.filter(req => req.checkInHistory?.length > 0);
+    if (requestsWithCheckins.length > 0) {
+      doc.addPage();
+      doc.text('Check-in Details', 15, 20);
+      
+      requestsWithCheckins.forEach((req, index) => {
+        doc.autoTable({
+          startY: index === 0 ? 30 : doc.lastAutoTable.finalY + 10,
+          head: [[`Request ${req.requestNumber} - ${req.requestedFor}`]],
+          body: req.checkInHistory.map(ch => [[
+            `Visitor: ${ch.name}`,
+            `ID: ${ch.idNumber}`,
+            `Time: ${new Date(ch.checkInTime).toLocaleString()}`,
+            `Verified by: ${ch.checkedBy}`
+          ].join(' | ')]),
+          styles: { fontSize: 8 }
+        });
+      });
+    }
+
+    doc.save(`access_requests_report_${new Date().toISOString().split('T')[0]}.pdf`);
+  };
 
   const getChartData = () => {
     const filteredData = getFilteredData();
@@ -283,22 +282,17 @@ const exportToPDF = () => {
     }));
   };
 
+  const handleExport = () => {
+    if (selectedExportType === 'excel') {
+      exportToExcel();
+    } else {
+      exportToPDF();
+    }
+    setShowDateModal(false);
+  };
 
-
-const handleExport = () => {
-  if (selectedExportType === 'excel') {
-    exportToExcel();
-  } else {
-    exportToPDF();
-  }
-  setShowDateModal(false);
-};
-
-  
   if (loading) return <div className="p-8 text-center">Loading reports...</div>;
 
-
-  
   return (
     <div className="p-6 space-y-8">
       <div className="flex justify-between items-center">
@@ -323,42 +317,34 @@ const handleExport = () => {
         )}
       </div>
 
-      {/* Rest of the component remains the same */}
-      
       <ExportModal
-            showDateModal={showDateModal}
-            setShowDateModal={setShowDateModal}
-            dateRange={dateRange}
-            setDateRange={setDateRange}
-            selectedExportType={selectedExportType}
-            handleExport={handleExport}
-             />
-
-
-
-
-
+        showDateModal={showDateModal}
+        setShowDateModal={setShowDateModal}
+        dateRange={dateRange}
+        setDateRange={setDateRange}
+        selectedExportType={selectedExportType}
+        handleExport={handleExport}
+      />
 
       {/* Summary Stats */}
-<div className="flex justify-center gap-6">
-  <Card className="w-64"> {/* Adjust w-64 to your preferred width */}
-    <CardContent className="p-6">
-      <div className="text-center">
-        <h3 className="text-lg font-medium text-gray-600">Total Requests</h3>
-        <p className="text-4xl font-bold text-[#0A2647] mt-2">{summaryStats.total}</p>
+      <div className="flex justify-center gap-6">
+        <Card className="w-64">
+          <CardContent className="p-6">
+            <div className="text-center">
+              <h3 className="text-lg font-medium text-gray-600">Total Requests</h3>
+              <p className="text-4xl font-bold text-[#0A2647] mt-2">{summaryStats.total}</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="w-64">
+          <CardContent className="p-6">
+            <div className="text-center">
+              <h3 className="text-lg font-medium text-gray-600">Active Requests</h3>
+              <p className="text-4xl font-bold text-green-600 mt-2">{summaryStats.active}</p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
-    </CardContent>
-  </Card>
-  <Card className="w-64"> {/* Adjust w-64 to your preferred width */}
-    <CardContent className="p-6">
-      <div className="text-center">
-        <h3 className="text-lg font-medium text-gray-600">Active Requests</h3>
-        <p className="text-4xl font-bold text-green-600 mt-2">{summaryStats.active}</p>
-      </div>
-    </CardContent>
-  </Card>
-</div>
-      
 
       {/* Filters */}
       <Card>
@@ -403,7 +389,7 @@ const handleExport = () => {
               <select
                 value={filters.requestedBy}
                 onChange={(e) => setFilters({...filters, requestedBy: e.target.value})}
-                className="w-full border rounded-md p-2"
+                                className="w-full border rounded-md p-2"
               >
                 <option value="all">All Users</option>
                 {Array.from(new Set(requests.map(req => req.requestedFor)))
@@ -431,8 +417,7 @@ const handleExport = () => {
         </CardContent>
       </Card>
 
-
-      {/* Charts */}
+        {/* Charts */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
