@@ -1,15 +1,15 @@
-
+// src/config/roles.js
 export const ROLE_ACCESS = {
   admin: {
     name: 'Admin',
-    access: ['dashboard', 'upload', 'requests', 'reports', 'users', 'settings']
+    access: ['dashboard', 'upload', 'requests', 'reports', 'users', 'settings', 'guide']
   },
   user: {
     name: 'User',
-    access: ['dashboard', 'upload', 'requests', 'reports']
+    access: ['dashboard', 'upload', 'requests', 'guide']
   },
   security: {
     name: 'Security',
-    access: ['dashboard', 'requests', 'reports']
+    access: ['dashboard', 'requests', 'guide']
   }
 };
