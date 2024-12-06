@@ -21,6 +21,7 @@ import {
 } from 'recharts';
 import { Download, Filter, Calendar, FileText } from 'lucide-react';
 import * as XLSX from 'xlsx';
+import { PDFDownloadLink } from '@react-pdf/renderer';
 
 const Reports = () => {
   const [requests, setRequests] = useState([]);
@@ -36,6 +37,13 @@ const Reports = () => {
   useEffect(() => {
     fetchData();
   }, [dateRange]);
+
+    const [filters, setFilters] = useState({
+    dateRange: 'all',
+    status: 'all',
+    requestedBy: 'all',
+    searchTerm: ''
+  });
 
   const fetchData = async () => {
     try {
@@ -55,16 +63,20 @@ const Reports = () => {
     }
   };
 
+  // Enhanced statistics calculation
   const calculateStats = (data) => {
     const currentDate = new Date();
-    
     const stats = {
       total: data.length,
       active: data.filter(req => new Date(req.accessEndDate) >= currentDate).length,
       expired: data.filter(req => new Date(req.accessEndDate) < currentDate).length,
-      checkedIn: data.filter(req => req.checkedIn).length
+      checkedIn: data.filter(req => req.checkedIn).length,
+      // Detailed analytics
+      uniqueRequestors: new Set(data.map(req => req.requestedFor)).size,
+      averageAccessDuration: calculateAverageDuration(data),
+      mostFrequentVisitor: findMostFrequent(data, 'requestedFor'),
+      weeklyTrend: calculateWeeklyTrend(data)
     };
-
     setSummaryStats(stats);
   };
 
@@ -75,13 +87,19 @@ const Reports = () => {
       'Start Date': new Date(req.accessStartDate).toLocaleDateString(),
       'End Date': new Date(req.accessEndDate).toLocaleDateString(),
       'Status': new Date(req.accessEndDate) >= new Date() ? 'Active' : 'Expired',
-      'Checked In': req.checkedIn ? 'Yes' : 'No'
+      'Duration (Days)': calculateDuration(req.accessStartDate, req.accessEndDate),
+      'Checked In': req.checkedIn ? 'Yes' : 'No',
+      'Check-in Times': req.checkInHistory?.length || 0,
+      'Last Check-in': req.checkInHistory?.length ? 
+        new Date(req.checkInHistory[req.checkInHistory.length - 1].checkInTime).toLocaleString() : 'N/A',
+      'Created By': req.uploadedBy,
+      'Created Date': new Date(req.createdAt).toLocaleString(),
     }));
 
     const ws = XLSX.utils.json_to_sheet(exportData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Requests');
-    XLSX.writeFile(wb, 'access_requests_report.xlsx');
+    XLSX.writeFile(wb, 'detailed_access_requests_report.xlsx');
   };
 
   // Get data for charts
@@ -101,114 +119,140 @@ const Reports = () => {
 
   if (loading) return <div>Loading reports...</div>;
 
+ 
   return (
-    <div className="p-6 space-y-6">
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Requests</p>
-                <h3 className="text-2xl font-bold mt-2">{summaryStats.total}</h3>
-              </div>
-              <FileText className="text-blue-500" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Active Requests</p>
-                <h3 className="text-2xl font-bold mt-2">{summaryStats.active}</h3>
-              </div>
-              <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
-                <div className="h-3 w-3 rounded-full bg-green-500" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Similar cards for expired and checked-in */}
-      </div>
-
-      {/* Controls */}
+    <div className="p-6 space-y-8">
+      {/* Title and Export Options */}
       <div className="flex justify-between items-center">
-        <div className="space-x-4">
-          <select
-            value={dateRange}
-            onChange={(e) => setDateRange(e.target.value)}
-            className="border rounded-md px-3 py-2"
+        <h1 className="text-2xl font-bold text-[#0A2647]">Access Request Reports</h1>
+        <div className="flex space-x-3">
+          <Button onClick={exportToExcel}>
+            <Download className="w-4 h-4 mr-2" />
+            Export Excel
+          </Button>
+          <PDFDownloadLink 
+            document={<ReportPDF data={requests} stats={summaryStats} />}
+            fileName="access_requests_report.pdf"
           >
-            <option value="week">Last Week</option>
-            <option value="month">Last Month</option>
-            <option value="year">Last Year</option>
-          </select>
+            <Button>
+              <FileText className="w-4 h-4 mr-2" />
+              Export PDF
+            </Button>
+          </PDFDownloadLink>
         </div>
-        <Button onClick={exportToExcel}>
-          <Download className="w-4 h-4 mr-2" />
-          Export Report
-        </Button>
       </div>
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Interactive Filters */}
+      <Card className="bg-white">
+        <CardHeader>
+          <CardTitle>Filters</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Date Range</label>
+              <select
+                value={filters.dateRange}
+                onChange={(e) => setFilters({...filters, dateRange: e.target.value})}
+                className="w-full border rounded-md p-2"
+              >
+                <option value="all">All Time</option>
+                <option value="today">Today</option>
+                <option value="week">This Week</option>
+                <option value="month">This Month</option>
+                <option value="year">This Year</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Status</label>
+              <select
+                value={filters.status}
+                onChange={(e) => setFilters({...filters, status: e.target.value})}
+                className="w-full border rounded-md p-2"
+              >
+                <option value="all">All Status</option>
+                <option value="active">Active</option>
+                <option value="expired">Expired</option>
+                <option value="checkedIn">Checked In</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Requested By</label>
+              <select
+                value={filters.requestedBy}
+                onChange={(e) => setFilters({...filters, requestedBy: e.target.value})}
+                className="w-full border rounded-md p-2"
+              >
+                <option value="all">All Users</option>
+                {Array.from(new Set(requests.map(req => req.requestedFor))).map(user => (
+                  <option key={user} value={user}>{user}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Search</label>
+              <input
+                type="text"
+                value={filters.searchTerm}
+                onChange={(e) => setFilters({...filters, searchTerm: e.target.value})}
+                placeholder="Search requests..."
+                className="w-full border rounded-md p-2"
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Summary Statistics */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div className="col-span-2 md:col-start-2">
+          <Card>
+            <CardContent className="p-6">
+              <div className="text-center">
+                <h3 className="text-lg font-medium text-gray-600">Total Requests</h3>
+                <p className="text-4xl font-bold text-[#0A2647] mt-2">{summaryStats.total}</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        <div className="col-span-2 md:col-start-2">
+          <Card>
+            <CardContent className="p-6">
+              <div className="text-center">
+                <h3 className="text-lg font-medium text-gray-600">Active Requests</h3>
+                <p className="text-4xl font-bold text-green-600 mt-2">{summaryStats.active}</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* Detailed Analytics */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Monthly Request Trend</CardTitle>
+            <CardTitle>Request Trends</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={getChartData()}>
+                <BarChart data={getChartData()}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="month" />
                   <YAxis />
                   <Tooltip />
-                  <Line 
-                    type="monotone" 
-                    dataKey="requests" 
-                    stroke="#0A2647" 
-                    strokeWidth={2} 
-                  />
-                </LineChart>
+                  <Legend />
+                  <Bar dataKey="requests" fill="#0A2647" />
+                </BarChart>
               </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Request Status Distribution</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={[
-                      { name: 'Active', value: summaryStats.active },
-                      { name: 'Expired', value: summaryStats.expired }
-                    ]}
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={100}
-                    fill="#0A2647"
-                    dataKey="value"
-                    label
-                  >
-                    <Cell fill="#0A2647" />
-                    <Cell fill="#EF4444" />
-                  </Pie>
-                  <Tooltip />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Add more charts and analytics here */}
       </div>
     </div>
   );
