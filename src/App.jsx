@@ -10,24 +10,26 @@ import Reports from './pages/Reports';
 import Dashboard from './pages/Dashboard';
 import UserGuide from './pages/UserGuide';
 
-
-
 function App() {
   return (
-        <ThemeProvider>
-<Routes>
-  <Route path="/auth" element={<AuthForm />} />
-  <Route path="/" element={<AuthGuard><Layout /></AuthGuard>}>
-    <Route path="dashboard" element={<Dashboard />} />
-    <Route path="upload" element={<UploadPage />} />
-    <Route path="requests" element={<RequestsPage />} />
-    <Route path="reports" element={<Reports />} />
-    <Route path="users" element={<UserManagement />} />
-    <Route path="guide" element={<UserGuide />} />
-    <Route index element={<Navigate to="/dashboard" replace />} />
-  </Route>
-</Routes>
-              </ThemeProvider>
+    <ThemeProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/auth" element={<AuthForm />} />
+          <Route path="/" element={<Navigate to="/auth" replace />} />
+          <Route path="/app" element={<AuthGuard><Layout /></AuthGuard>}>
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="upload" element={<UploadPage />} />
+            <Route path="requests" element={<RequestsPage />} />
+            <Route path="reports" element={<Reports />} />
+            <Route path="users" element={<UserManagement />} />
+            <Route path="guide" element={<UserGuide />} />
+            <Route index element={<Navigate to="dashboard" replace />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }
+
 export default App;
