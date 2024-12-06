@@ -30,7 +30,7 @@ export const Sidebar = () => {
       path: '/reports',
       icon: <BarChart2 size={20} />,
       label: 'Reports',
-      roles: ['admin'] // Only admin can see reports
+      roles: ['admin', 'user', 'security'] // Only admin can see reports
     },
     {
       path: '/users',
