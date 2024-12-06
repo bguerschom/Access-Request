@@ -1,20 +1,26 @@
-// src/pages/UserManagement.jsx
+// src/components/users/UserManagement.jsx
 import { useState, useEffect } from 'react';
-import { collection, getDocs, updateDoc, doc, deleteDoc } from 'firebase/firestore';
-import { db } from '@/config/firebase';
+import { collection, getDocs, updateDoc, doc } from 'firebase/firestore';
+import { updatePassword } from 'firebase/auth'; // for password updates
+import { db, auth } from '@/config/firebase';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Edit2, Trash2, UserPlus, Search } from 'lucide-react';
-import AddUserModal from '../components/users/AddUserModal';
-import UserDetailView from '../components/users/UserDetailView';
+import { Settings, Lock } from 'lucide-react';
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [error, setError] = useState(null);
+
+  // Define available roles and their sidebar access
+  const roles = {
+    admin: ['dashboard', 'upload', 'requests', 'reports', 'users', 'settings'],
+    user: ['dashboard', 'upload', 'requests', 'reports'],
+    security: ['dashboard', 'requests','reports' ]
+  };
 
   useEffect(() => {
     fetchUsers();
@@ -23,61 +29,78 @@ const UserManagement = () => {
   const fetchUsers = async () => {
     try {
       const usersCollection = collection(db, 'users');
-      const userSnapshot = await getDocs(usersCollection);
-      const userList = userSnapshot.docs.map(doc => ({
+      const snapshot = await getDocs(usersCollection);
+      const usersList = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       }));
-      setUsers(userList);
+      setUsers(usersList);
     } catch (error) {
-      setError('Failed to fetch users');
       console.error('Error fetching users:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDeleteUser = async (userId) => {
-    if (window.confirm('Are you sure you want to delete this user?')) {
-      try {
-        await deleteDoc(doc(db, 'users', userId));
-        fetchUsers(); // Refresh user list
-      } catch (error) {
-        setError('Failed to delete user');
-        console.error('Error deleting user:', error);
-      }
+  const handlePasswordChange = async (userId, newPassword) => {
+    try {
+      // Update password in Firebase Auth
+      // Note: This might need additional setup or a different approach
+      // depending on your authentication setup
+      await updatePassword(auth.currentUser, newPassword);
+
+      setIsEditModalOpen(false);
+      setNewPassword('');
+      // Show success message
+    } catch (error) {
+      setError('Failed to update password');
+      console.error('Error updating password:', error);
     }
   };
 
-  const filteredUsers = users.filter(user =>
-    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleRoleChange = async (userId, newRole) => {
+    try {
+      await updateDoc(doc(db, 'users', userId), {
+        role: newRole
+      });
+      fetchUsers();
+    } catch (error) {
+      console.error('Error updating role:', error);
+    }
+  };
+
+  // Password Change Modal
+  const PasswordChangeModal = ({ isOpen, onClose, onSubmit }) => {
+    if (!isOpen) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg p-6 w-full max-w-md">
+          <h3 className="text-lg font-semibold mb-4">Change Password</h3>
+          <input
+            type="password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            placeholder="New Password"
+            className="w-full p-2 border rounded mb-4"
+          />
+          {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+          <div className="flex justify-end space-x-3">
+            <Button variant="outline" onClick={onClose}>Cancel</Button>
+            <Button onClick={() => onSubmit(newPassword)}>Update Password</Button>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   if (loading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error}</div>;
 
   return (
     <div className="p-6">
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
+        <CardHeader>
           <CardTitle>User Management</CardTitle>
-          <div className="flex space-x-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <input
-                type="text"
-                placeholder="Search users..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 border rounded-md"
-              />
-            </div>
-            <Button onClick={() => setIsAddModalOpen(true)}>
-              <UserPlus className="w-4 h-4 mr-2" />
-              Add User
-            </Button>
-          </div>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
@@ -86,13 +109,12 @@ const UserManagement = () => {
                 <tr className="bg-gray-50">
                   <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">User</th>
                   <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Role</th>
-                  <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Department</th>
-                  <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Status</th>
+                  <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Access</th>
                   <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {filteredUsers.map((user) => (
+                {users.map((user) => (
                   <tr key={user.id}>
                     <td className="px-6 py-4">
                       <div>
@@ -101,37 +123,37 @@ const UserManagement = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
-                        {user.role}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">{user.department}</td>
-                    <td className="px-6 py-4">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        user.status === 'active' 
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-red-100 text-red-800'
-                      }`}>
-                        {user.status}
-                      </span>
+                      <select
+                        value={user.role}
+                        onChange={(e) => handleRoleChange(user.id, e.target.value)}
+                        className="border rounded p-1"
+                      >
+                        <option value="admin">Admin</option>
+                        <option value="user">User</option>
+                        <option value="security">Security</option>
+                      </select>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex space-x-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setSelectedUser(user)}
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => handleDeleteUser(user.id)}
-                        >
-                          <Trash2 className="w-4 h-4 text-red-500" />
-                        </Button>
+                      <div className="text-sm">
+                        {roles[user.role]?.map(access => (
+                          <span key={access} className="inline-block bg-gray-100 px-2 py-1 rounded mr-1 mb-1">
+                            {access}
+                          </span>
+                        ))}
                       </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedUser(user);
+                          setIsEditModalOpen(true);
+                        }}
+                      >
+                        <Lock className="w-4 h-4 mr-2" />
+                        Change Password
+                      </Button>
                     </td>
                   </tr>
                 ))}
@@ -141,26 +163,15 @@ const UserManagement = () => {
         </CardContent>
       </Card>
 
-      {/* Modals */}
-      <AddUserModal
-        isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        onSuccess={() => {
-          fetchUsers();
-          setIsAddModalOpen(false);
+      <PasswordChangeModal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setNewPassword('');
+          setError(null);
         }}
+        onSubmit={(password) => handlePasswordChange(selectedUser?.id, password)}
       />
-
-      {selectedUser && (
-        <UserDetailView
-          user={selectedUser}
-          onClose={() => setSelectedUser(null)}
-          onUpdate={() => {
-            fetchUsers();
-            setSelectedUser(null);
-          }}
-        />
-      )}
     </div>
   );
 };
