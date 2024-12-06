@@ -31,18 +31,6 @@ export const Header = () => {
           </div>
           
           <div className="flex items-center space-x-4">
-                        {/* Theme Toggle */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={toggleTheme}
-            >
-              {theme === 'dark' ? (
-                <Sun className="h-4 w-4" />
-              ) : (
-                <Moon className="h-4 w-4" />
-              )}
-            </Button>
             <div className="flex items-center text-sm text-gray-600 dark:text-gray-300">
               <User className="h-4 w-4 mr-2" />
               <span>{auth.currentUser?.email}</span>
