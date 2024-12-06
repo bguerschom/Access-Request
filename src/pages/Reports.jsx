@@ -107,69 +107,104 @@ const Reports = () => {
     });
   };
 
-  const exportToExcel = () => {
-    const filteredData = getFilteredData();
-    const exportData = filteredData.map(req => ({
-      'Request Number': req.requestNumber,
-      'Requested For': req.requestedFor,
-      'Start Date': new Date(req.accessStartDate).toLocaleDateString(),
-      'End Date': new Date(req.accessEndDate).toLocaleDateString(),
-      'Status': new Date(req.accessEndDate) >= new Date() ? 'Active' : 'Expired',
-      'Checked In': req.checkedIn ? 'Yes' : 'No',
-      'Check-in Times': req.checkInHistory?.length || 0,
-      'Created By': req.uploadedBy,
-      'Created Date': new Date(req.createdAt).toLocaleDateString(),
-      'Description': req.description,
-      'Access Duration (Days)': Math.ceil((new Date(req.accessEndDate) - new Date(req.accessStartDate)) / (1000 * 60 * 60 * 24))
-    }));
+const exportToExcel = () => {
+  const exportData = requests.map(req => ({
+    'Request Number': req.requestNumber,
+    'Requested For': req.requestedFor,
+    'Start Date': new Date(req.accessStartDate).toLocaleDateString(),
+    'End Date': new Date(req.accessEndDate).toLocaleDateString(),
+    'Status': new Date(req.accessEndDate) >= new Date() ? 'Active' : 'Expired',
+    'Description': req.description,
+    'Total Check-ins': req.checkInHistory?.length || 0,
+    'Last Check-in': req.checkInHistory?.length ? 
+      new Date(req.checkInHistory[req.checkInHistory.length - 1].checkInTime).toLocaleString() : 'N/A',
+    'Check-in Details': req.checkInHistory?.map(ch => 
+      `${ch.visitorName} (ID: ${ch.visitorId}) - ${new Date(ch.checkInTime).toLocaleString()}`
+    ).join('; ') || 'No check-ins',
+    'Created By': req.uploadedBy,
+    'Created Date': new Date(req.createdAt).toLocaleDateString(),
+    'Access Duration (Days)': Math.ceil((new Date(req.accessEndDate) - new Date(req.accessStartDate)) / (1000 * 60 * 60 * 24)),
+    'Remaining Days': Math.ceil((new Date(req.accessEndDate) - new Date()) / (1000 * 60 * 60 * 24))
+  }));
 
-    const ws = XLSX.utils.json_to_sheet(exportData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Requests');
-    XLSX.writeFile(wb, 'access_requests_report.xlsx');
-  };
+  const ws = XLSX.utils.json_to_sheet(exportData);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Access Requests');
+  XLSX.writeFile(wb, `access_requests_report_${new Date().toISOString().split('T')[0]}.xlsx`);
+};
 
-  const exportToPDF = () => {
-    const filteredData = getFilteredData();
-    const doc = new jsPDF();
-    
-    // Add title and summary
-    doc.setFontSize(16);
-    doc.text('Access Request Report', 14, 15);
-    
-    doc.setFontSize(11);
-    doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 25);
-    doc.text(`Total Requests: ${summaryStats.total}`, 14, 32);
-    doc.text(`Active Requests: ${summaryStats.active}`, 14, 39);
-    doc.text(`Expired Requests: ${summaryStats.expired}`, 14, 46);
-    
-    // Create table
-    const tableColumn = [
-      "Request Number",
-      "Requested For",
-      "Status",
-      "Start Date",
-      "End Date"
-    ];
-    
-    const tableRows = filteredData.map(req => [
+const exportToPDF = () => {
+  const doc = new jsPDF();
+  
+  // Add Title and Header
+  doc.setFontSize(20);
+  doc.setTextColor(10, 38, 71);
+  doc.text('Access Request Report', 15, 20);
+  
+  // Add Summary Statistics
+  doc.setFontSize(12);
+  doc.setTextColor(0, 0, 0);
+  doc.text([
+    `Generated: ${new Date().toLocaleString()}`,
+    `Total Requests: ${summaryStats.total}`,
+    `Active Requests: ${summaryStats.active}`,
+    `Expired Requests: ${summaryStats.expired}`,
+    `Total Check-ins: ${requests.reduce((sum, req) => sum + (req.checkInHistory?.length || 0), 0)}`
+  ], 15, 35);
+
+  // Add Bar Chart
+  const chartData = getChartData();
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  // Create chart using canvas
+  // Convert to image and add to PDF
+  const chartImg = canvas.toDataURL('image/png');
+  doc.addImage(chartImg, 'PNG', 15, 80, 180, 100);
+
+  // Add Request Table
+  doc.autoTable({
+    startY: 190,
+    head: [[
+      'Request #',
+      'Requested For',
+      'Status',
+      'Access Period',
+      'Check-ins'
+    ]],
+    body: requests.map(req => [
       req.requestNumber,
       req.requestedFor,
       new Date(req.accessEndDate) >= new Date() ? 'Active' : 'Expired',
-      new Date(req.accessStartDate).toLocaleDateString(),
-      new Date(req.accessEndDate).toLocaleDateString()
-    ]);
+      `${new Date(req.accessStartDate).toLocaleDateString()} - ${new Date(req.accessEndDate).toLocaleDateString()}`,
+      req.checkInHistory?.length || 0
+    ]),
+    styles: { fontSize: 8 },
+    headStyles: { fillColor: [10, 38, 71] }
+  });
 
-    doc.autoTable({
-      head: [tableColumn],
-      body: tableRows,
-      startY: 55,
-      styles: { fontSize: 8 },
-      headStyles: { fillColor: [10, 38, 71] }
+  // Add Check-in Details
+  const requestsWithCheckins = requests.filter(req => req.checkInHistory?.length > 0);
+  if (requestsWithCheckins.length > 0) {
+    doc.addPage();
+    doc.text('Check-in Details', 15, 20);
+    
+    requestsWithCheckins.forEach((req, index) => {
+      doc.autoTable({
+        startY: index === 0 ? 30 : doc.lastAutoTable.finalY + 10,
+        head: [[`Request ${req.requestNumber} - ${req.requestedFor}`]],
+        body: req.checkInHistory.map(ch => [[
+          `Visitor: ${ch.visitorName}`,
+          `ID: ${ch.visitorId}`,
+          `Time: ${new Date(ch.checkInTime).toLocaleString()}`,
+          `Verified by: ${ch.checkedBy}`
+        ].join(' | ')]),
+        styles: { fontSize: 8 }
+      });
     });
+  }
 
-    doc.save('access_requests_report.pdf');
-  };
+  doc.save(`access_requests_report_${new Date().toISOString().split('T')[0]}.pdf`);
+};
 
   const getChartData = () => {
     const filteredData = getFilteredData();
