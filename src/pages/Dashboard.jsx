@@ -107,34 +107,34 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Recent Requests */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Requests</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {recentRequests.map((request) => (
-                <div key={request.id} className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg animate-fade-in">
-                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                    <FileText className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <p className="font-medium">{request.requestNumber}</p>
-                    <p className="text-sm text-gray-500">
-                      {new Date(request.createdAt).toLocaleDateString()}
-                    </p>
-                  </div>
-                </div>
-              ))}
-              {recentRequests.length === 0 && (
-                <div className="text-center text-gray-500 py-4">
-                  No recent requests found
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+// Update the Recent Requests section in Dashboard.jsx
+<Card>
+  <CardHeader>
+    <CardTitle>Recent Requests</CardTitle>
+  </CardHeader>
+  <CardContent>
+    <div className="space-y-3">
+      {recentRequests.map((request) => (
+        <div key={request.id} className="flex justify-between items-center p-3 hover:bg-gray-50 rounded-lg transition-colors">
+          <div className="space-y-1">
+            <p className="font-medium text-[#0A2647]">{request.requestNumber}</p>
+            <p className="text-sm text-gray-600">
+              Requested by {request.requestedFor}
+            </p>
+          </div>
+          <div className="text-sm text-gray-500">
+            {new Date(request.createdAt).toLocaleDateString()}
+          </div>
+        </div>
+      ))}
+      {recentRequests.length === 0 && (
+        <div className="text-center text-gray-500 py-4">
+          No recent requests found
+        </div>
+      )}
+    </div>
+  </CardContent>
+</Card>
       </div>
     </div>
   );
