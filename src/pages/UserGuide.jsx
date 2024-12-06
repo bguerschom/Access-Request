@@ -15,8 +15,7 @@ import {
 import './styles/userGuide.css';
 
 
-const UserGuide = () => {
-  const { userData } = useAuth();
+
 
   // Content for different roles
   const guideContent = {
@@ -90,9 +89,9 @@ const UserGuide = () => {
           }
         ]
       }
-    ]
-  },
-  user: {
+      ]
+    },
+    user: {
     title: "User Access Guide",
     description: "Learn how to efficiently manage access requests and track their status. This guide will help you navigate through all user features.",
     sections: [
@@ -141,15 +140,15 @@ const UserGuide = () => {
         ]
       }
     ]
-  },
-  security: {
-    title: "Security Personnel Guide",
-    description: "Essential guide for managing and monitoring access control. Learn how to efficiently handle check-ins and maintain security protocols.",
-    sections: [
-      {
-        title: "Visitor Check-in Process",
-        icon: <CheckSquare className="w-6 h-6 text-blue-500" />,
-        steps: [
+    },
+    security: {
+      title: "Security Personnel Guide",
+      description: "Essential guide for managing and monitoring access control. Learn how to efficiently handle check-ins and maintain security protocols.",
+      sections: [
+        {
+          title: "Visitor Check-in Process",
+          icon: <CheckSquare className="w-6 h-6 text-blue-500" />,
+          steps: [
           {
             title: "Verify Access Request",
             description: "Search for visitor's access request using their request number or name. Confirm the access is active and valid."
@@ -192,7 +191,12 @@ const UserGuide = () => {
       }
     ]
   }
+};
 
+const UserGuide = () => {
+  const { userData } = useAuth();
+  return null;
+};
 
- }; 
+export default UserGuide;
 
