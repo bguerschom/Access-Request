@@ -6,10 +6,10 @@ export const ROLE_ACCESS = {
   },
   user: {
     name: 'User',
-    access: ['dashboard', 'upload', 'requests', 'guide']
+    access: ['dashboard', 'upload', 'requests','reports', 'guide']
   },
   security: {
     name: 'Security',
-    access: ['dashboard', 'requests', 'guide']
+    access: ['dashboard', 'requests','reports', 'guide']
   }
 };
