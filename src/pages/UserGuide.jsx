@@ -190,7 +190,7 @@ const UserGuide = () => {
       }
     ]
   }
-};
+
 
   // Add this CSS for enhanced animations
 const additionalStyles = `
@@ -219,4 +219,6 @@ const additionalStyles = `
   }
 `;
 
+
+ }; 
 export default UserGuide;
