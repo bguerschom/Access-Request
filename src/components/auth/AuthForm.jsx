@@ -1,108 +1,102 @@
-import React, { useState } from 'react';
+// src/components/auth/AuthForm.jsx
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '@/config/firebase';
+import { Button } from '@/components/ui/button';
+import { FileText, ArrowRight, PaperclipIcon, Recycle } from 'lucide-react';
 
 const AuthForm = () => {
-  const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      if (isLogin) {
-        await signInWithEmailAndPassword(auth, email, password);
-      } else {
-        if (password !== confirmPassword) {
-          setError('Passwords do not match');
-          return;
-        }
-        await createUserWithEmailAndPassword(auth, email, password);
-      }
+      await signInWithEmailAndPassword(auth, email, password);
       navigate('/');
     } catch (err) {
-      setError(isLogin ? 'Invalid credentials' : 'Registration failed');
+      setError('Invalid credentials');
     }
   };
 
   return (
-    <div className="min-h-screen flex bg-white">
-      <div className="hidden lg:flex lg:w-1/2 bg-[#0A2647] items-center justify-center">
-        <div className="text-center text-white space-y-4">
-          <h1 className="text-4xl font-bold">Welcome</h1>
-          <p className="text-lg text-white/70">Access Request System</p>
+    <div className="min-h-screen bg-[#0A2647] flex items-center justify-center p-4">
+      <div className="w-full max-w-md space-y-8 bg-white rounded-2xl shadow-xl p-8 relative overflow-hidden">
+        {/* Animated Background Elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="animate-float absolute -top-4 left-4 text-blue-100">
+            <FileText size={40} />
+          </div>
+          <div className="animate-float-delayed absolute top-20 right-4 text-blue-100">
+            <Recycle size={30} />
+          </div>
+          <div className="animate-float-slow absolute bottom-4 left-4 text-blue-100">
+            <PaperclipIcon size={35} />
+          </div>
         </div>
-      </div>
-      
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
-        <div className="w-full max-w-md space-y-8">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold text-[#0A2647]">
-              {isLogin ? 'Sign In' : 'Create Account'}
-            </h2>
-            {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+
+        {/* Main Content */}
+        <div className="relative z-10">
+          <div className="text-center mb-8">
+            <div className="flex justify-center mb-6">
+              <div className="w-20 h-20 bg-[#0A2647] rounded-full flex items-center justify-center">
+                <FileText className="w-10 h-10 text-white" />
+              </div>
+            </div>
+            
+            {/* Animated Text */}
+            <div className="h-20 overflow-hidden">
+              <div className="animate-slide-text">
+                <p className="text-xl text-[#0A2647] font-medium py-4">Welcome to Paperless World</p>
+                <p className="text-xl text-[#0A2647] font-medium py-4">Efficient Access Management</p>
+                <p className="text-xl text-[#0A2647] font-medium py-4">Smart Document Handling</p>
+              </div>
+            </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 border-b-2 border-gray-300 focus:border-[#0A2647] focus:outline-none transition-colors"
-                placeholder="Email Address"
-                required
-              />
-            </div>
-
-            <div>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 border-b-2 border-gray-300 focus:border-[#0A2647] focus:outline-none transition-colors"
-                placeholder="Password"
-                required
-              />
-            </div>
-
-            {!isLogin && (
-              <div>
-                <input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full px-4 py-3 border-b-2 border-gray-300 focus:border-[#0A2647] focus:outline-none transition-colors"
-                  placeholder="Confirm Password"
-                  required
-                />
+          <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+            {error && (
+              <div className="bg-red-50 text-red-500 p-3 rounded-lg text-sm text-center">
+                {error}
               </div>
             )}
 
-            <button
-              type="submit"
-              className="w-full py-4 bg-[#0A2647] text-white rounded-lg hover:bg-[#0A2647]/90 transition-colors"
-            >
-              {isLogin ? 'Sign In' : 'Sign Up'}
-            </button>
+            <div className="space-y-4">
+              <div>
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0A2647] focus:border-transparent transition-all"
+                  placeholder="Email address"
+                />
+              </div>
 
-            <p className="text-center text-sm text-gray-600">
-              {isLogin ? "Don't have an account? " : "Already have an account? "}
-              <button
-                type="button"
-                onClick={() => {
-                  setIsLogin(!isLogin);
-                  setError('');
-                }}
-                className="text-[#0A2647] font-semibold hover:underline"
-              >
-                {isLogin ? 'Sign Up' : 'Sign In'}
-              </button>
-            </p>
+              <div>
+                <input
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#0A2647] focus:border-transparent transition-all"
+                  placeholder="Password"
+                />
+              </div>
+            </div>
+
+            <Button
+              type="submit"
+              className="w-full py-3 bg-[#0A2647] text-white rounded-lg hover:bg-[#0A2647]/90 transition-all transform hover:scale-[1.02]"
+            >
+              <span className="flex items-center justify-center">
+                Sign in
+                <ArrowRight className="ml-2 w-4 h-4" />
+              </span>
+            </Button>
           </form>
         </div>
       </div>
