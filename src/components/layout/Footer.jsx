@@ -9,7 +9,7 @@ export const Footer = () => {
   <div className="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
     <div className="flex justify-center items-center">
       <div className="text-sm text-gray-600 dark:text-gray-400">
-        © {currentYear} Access Request System. All rights reserved.
+        © {currentYear} Bigue Creation. All rights reserved.
       </div>
     </div>
   </div>
