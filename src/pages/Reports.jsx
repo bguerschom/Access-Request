@@ -107,7 +107,20 @@ const Reports = () => {
     });
   };
 
+  const getFilteredData = () => {
+ return requests.filter(req => {
+   if (dateRange.startDate && dateRange.endDate) {
+     const reqStart = new Date(req.accessStartDate);
+     const filterStart = new Date(dateRange.startDate);
+     const filterEnd = new Date(dateRange.endDate);
+     return reqStart >= filterStart && reqStart <= filterEnd;
+   }
+   return true;
+ });
+};
+
 const exportToExcel = () => {
+   const filteredData = getFilteredData();
   const exportData = requests.map(req => ({
     'Request Number': req.requestNumber,
     'Requested For': req.requestedFor,
@@ -134,6 +147,7 @@ const exportToExcel = () => {
 };
 
 const exportToPDF = () => {
+  const filteredData = getFilteredData();
   const doc = new jsPDF();
   
   // Add Title and Header
@@ -220,6 +234,11 @@ const exportToPDF = () => {
     }));
   };
 
+const [dateRange, setDateRange] = useState({
+ startDate: '',
+ endDate: ''
+});
+
   if (loading) return <div className="p-8 text-center">Loading reports...</div>;
 
   return (
@@ -240,6 +259,27 @@ const exportToPDF = () => {
           </div>
         )}
       </div>
+
+      <div className="flex space-x-4 mb-4">
+ <div>
+   <label className="block text-sm mb-1">Start Date</label>
+   <input
+     type="date"
+     value={dateRange.startDate}
+     onChange={(e) => setDateRange(prev => ({...prev, startDate: e.target.value}))}
+     className="border rounded p-2"
+   />
+ </div>
+ <div>
+   <label className="block text-sm mb-1">End Date</label>
+   <input
+     type="date"
+     value={dateRange.endDate} 
+     onChange={(e) => setDateRange(prev => ({...prev, endDate: e.target.value}))}
+     className="border rounded p-2"
+   />
+ </div>
+</div>
 
       {/* Summary Stats */}
 <div className="flex justify-center gap-6">
