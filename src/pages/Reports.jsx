@@ -274,7 +274,7 @@ const ExportModal = () => {
               <input
                 type="date"
                 value={dateRange.endDate}
-                onChange={(e) => setDateRange(prev => ({...prev, endDate: e.target.value})}
+                onChange={(e) => setDateRange(prev => ({...prev, endDate: e.target.value}))}
                 className="w-full border rounded p-2"
               />
             </div>
