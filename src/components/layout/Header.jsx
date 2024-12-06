@@ -1,6 +1,5 @@
-// src/components/layout/Header.jsx
 import { useNavigate } from 'react-router-dom';
-import { LogOut, User } from 'lucide-react';
+import { LogOut, User, Bell, Sun, Moon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { auth } from '@/config/firebase';
 import { useTheme } from '@/context/ThemeContext';
@@ -22,6 +21,7 @@ export const Header = () => {
     <header className="bg-white dark:bg-gray-800 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
+          {/* Left Side: Logo */}
           <div className="flex items-center">
             <img 
               src="/logo.png" 
@@ -29,8 +29,21 @@ export const Header = () => {
               className="h-8 w-auto"
             />
           </div>
-          
-          <div className="flex items-center space-x-4">
+
+          {/* Right Side: Theme Toggle, User Info, Logout */}
+          <div className="flex items-center space-x-6">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleTheme}
+            >
+              {theme === 'dark' ? (
+                <Sun className="h-5 w-5" />
+              ) : (
+                <Moon className="h-5 w-5" />
+              )}
+            </Button>
+
             <div className="flex items-center text-sm text-gray-600 dark:text-gray-300">
               <User className="h-4 w-4 mr-2" />
               <span>{auth.currentUser?.email}</span>
