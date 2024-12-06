@@ -276,14 +276,15 @@ const exportToPDF = () => {
     }));
   };
 
-const [dateRange, setDateRange] = useState({
- startDate: '',
- endDate: ''
-});
+
 
   // Add modal state
 const [showDateModal, setShowDateModal] = useState(false);
 const [selectedExportType, setSelectedExportType] = useState(null); // 'excel' or 'pdf'
+const [dateRange, setDateRange] = useState({
+    startDate: '',
+    endDate: ''
+   });
 
 const handleExport = () => {
   if (selectedExportType === 'excel') {
