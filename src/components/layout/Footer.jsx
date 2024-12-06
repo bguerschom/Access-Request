@@ -6,7 +6,8 @@ export const Footer = () => {
 
   return (
     <footer className="bg-white dark:bg-gray-800 shadow-lg mt-auto">
-
+      <div className="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
 
             <div className="flex items-center space-x-4">
           <div className="text-sm text-gray-600 dark:text-gray-400">
