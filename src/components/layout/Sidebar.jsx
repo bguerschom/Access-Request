@@ -68,7 +68,7 @@ export const Sidebar = () => {
   );
 
   return (
-    <aside className="w-64 min-h-[calc(100vh-64px)] bg-white shadow-lg">
+    <aside className="w-64 min-h-[calc(100vh-64px)] bg-white shadow-lg" style={{ marginTop: '64px' }} >
       <nav className="p-4 space-y-2">
         {allowedNavItems.map((item) => (
           <NavLink
