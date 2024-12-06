@@ -119,7 +119,7 @@ const exportToExcel = () => {
     'Last Check-in': req.checkInHistory?.length ? 
       new Date(req.checkInHistory[req.checkInHistory.length - 1].checkInTime).toLocaleString() : 'N/A',
     'Check-in Details': req.checkInHistory?.map(ch => 
-      `${ch.visitorName} (ID: ${ch.visitorId}) - ${new Date(ch.checkInTime).toLocaleString()}`
+      `${ch.name} (ID: ${ch.idNumber}) - ${new Date(ch.checkInTime).toLocaleString()}`
     ).join('; ') || 'No check-ins',
     'Created By': req.uploadedBy,
     'Created Date': new Date(req.createdAt).toLocaleDateString(),
@@ -193,8 +193,8 @@ const exportToPDF = () => {
         startY: index === 0 ? 30 : doc.lastAutoTable.finalY + 10,
         head: [[`Request ${req.requestNumber} - ${req.requestedFor}`]],
         body: req.checkInHistory.map(ch => [[
-          `Visitor: ${ch.visitorName}`,
-          `ID: ${ch.visitorId}`,
+          `Visitor: ${ch.name}`,
+          `ID: ${ch.idNumber}`,
           `Time: ${new Date(ch.checkInTime).toLocaleString()}`,
           `Verified by: ${ch.checkedBy}`
         ].join(' | ')]),
