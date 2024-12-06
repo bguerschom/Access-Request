@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '@/config/firebase';
-import { FileText, ArrowRight, PaperPlane } from 'lucide-react';
+import { FileText, ArrowRight, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const AuthForm = () => {
@@ -58,7 +58,7 @@ const AuthForm = () => {
           <div className="text-center mb-8">
             <div className="flex justify-center mb-4">
               <div className="w-16 h-16 bg-[#0A2647] rounded-full flex items-center justify-center animate-bounce-slow">
-                <PaperPlane className="w-8 h-8 text-white" />
+                <Send className="w-8 h-8 text-white" />
               </div>
             </div>
             <h2 className="text-2xl font-bold text-[#0A2647] mb-2">
