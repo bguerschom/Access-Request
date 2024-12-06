@@ -188,19 +188,7 @@ const UserManagement = () => {
     ))}
   </div>
 </td>
-                    <td className="px-6 py-4">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedUser(user);
-                          setIsPasswordModalOpen(true);
-                        }}
-                      >
-                        <Lock className="w-4 h-4 mr-2" />
-                        Change Password
-                      </Button>
-                    </td>
+
 <td className="px-6 py-4">
   <div className="flex space-x-2">
     <Button
