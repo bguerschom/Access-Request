@@ -49,12 +49,6 @@ export const Sidebar = () => {
       access: 'users'
     },
     {
-      path: '/settings',
-      icon: <Settings size={20} />,
-      label: 'Settings',
-      access: 'settings'
-    },
-    {
       path: '/guide',
       icon: <BookOpen size={20} />,
       label: 'User Guide',
