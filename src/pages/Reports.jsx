@@ -82,41 +82,37 @@ const Reports = () => {
     setSummaryStats(stats);
   };
 
-  const getFilteredData = () => {
-    return requests.filter(req => {
-      const endDate = new Date(req.accessEndDate);
-      const currentDate = new Date();
-      const isActive = endDate >= currentDate;
+const getFilteredData = () => {
+  return requests.filter(req => {
+    // Date range filter
+    const matchesDateRange = !dateRange.startDate || !dateRange.endDate || (
+      new Date(req.accessStartDate) >= new Date(dateRange.startDate) &&
+      new Date(req.accessStartDate) <= new Date(dateRange.endDate)
+    );
 
-      const matchesStatus = 
-        filters.status === 'all' ? true :
-        filters.status === 'active' ? isActive :
-        filters.status === 'expired' ? !isActive :
-        filters.status === 'checkedIn' ? req.checkedIn : true;
+    // Status filter
+    const endDate = new Date(req.accessEndDate);
+    const currentDate = new Date();
+    const isActive = endDate >= currentDate;
+    const matchesStatus = 
+      filters.status === 'all' ? true :
+      filters.status === 'active' ? isActive :
+      filters.status === 'expired' ? !isActive :
+      filters.status === 'checkedIn' ? req.checkedIn : true;
 
-      const matchesRequestor = 
-        filters.requestedBy === 'all' ? true :
-        req.requestedFor === filters.requestedBy;
+    // Requestor filter
+    const matchesRequestor = 
+      filters.requestedBy === 'all' ? true :
+      req.requestedFor === filters.requestedBy;
 
-      const matchesSearch = 
-        filters.searchTerm === '' ? true :
-        req.requestNumber.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
-        req.requestedFor.toLowerCase().includes(filters.searchTerm.toLowerCase());
+    // Search filter
+    const matchesSearch = 
+      filters.searchTerm === '' ? true :
+      req.requestNumber.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
+      req.requestedFor.toLowerCase().includes(filters.searchTerm.toLowerCase());
 
-      return matchesStatus && matchesRequestor && matchesSearch;
-    });
-  };
-
-  const getFilteredData = () => {
- return requests.filter(req => {
-   if (dateRange.startDate && dateRange.endDate) {
-     const reqStart = new Date(req.accessStartDate);
-     const filterStart = new Date(dateRange.startDate);
-     const filterEnd = new Date(dateRange.endDate);
-     return reqStart >= filterStart && reqStart <= filterEnd;
-   }
-   return true;
- });
+    return matchesDateRange && matchesStatus && matchesRequestor && matchesSearch;
+  });
 };
 
 const exportToExcel = () => {
