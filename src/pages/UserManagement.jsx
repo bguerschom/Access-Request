@@ -1,11 +1,12 @@
 // src/components/users/UserManagement.jsx
 import { useState, useEffect } from 'react';
-import { collection, getDocs, updateDoc, doc, setDoc } from 'firebase/firestore';
+import { collection, getDocs, updateDoc, doc, setDoc, deleteDoc } from 'firebase/firestore';
 import { createUserWithEmailAndPassword, updatePassword } from 'firebase/auth'; 
 import { db, auth } from '@/config/firebase';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Settings, Lock, UserPlus, X } from 'lucide-react';
+import { Settings, Lock, UserPlus, X, Trash2 } from 'lucide-react';
+import { ROLE_ACCESS } from '@/config/roles';
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
@@ -102,6 +103,17 @@ const UserManagement = () => {
       console.error('Error updating role:', error);
     }
   };
+  const handleDeleteUser = async (userId) => {
+  if (window.confirm('Are you sure you want to delete this user?')) {
+    try {
+      await deleteDoc(doc(db, 'users', userId));
+      fetchUsers(); // Refresh list
+    } catch (error) {
+      setError('Failed to delete user');
+      console.error('Error deleting user:', error);
+    }
+  }
+};
 
   const Modal = ({ isOpen, onClose, title, children }) => {
     if (!isOpen) return null;
@@ -167,15 +179,15 @@ const UserManagement = () => {
                         <option value="security">Security</option>
                       </select>
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm">
-                        {roles[user.role]?.map(access => (
-                          <span key={access} className="inline-block bg-gray-100 px-2 py-1 rounded mr-1 mb-1">
-                            {access}
-                          </span>
-                        ))}
-                      </div>
-                    </td>
+<td className="px-6 py-4">
+  <div className="text-sm">
+    {ROLE_ACCESS[user.role]?.access.map(access => (
+      <span key={access} className="inline-block bg-gray-100 px-2 py-1 rounded mr-1 mb-1">
+        {access}
+      </span>
+    ))}
+  </div>
+</td>
                     <td className="px-6 py-4">
                       <Button
                         variant="outline"
@@ -189,6 +201,30 @@ const UserManagement = () => {
                         Change Password
                       </Button>
                     </td>
+<td className="px-6 py-4">
+  <div className="flex space-x-2">
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={() => {
+        setSelectedUser(user);
+        setIsPasswordModalOpen(true);
+      }}
+    >
+      <Lock className="w-4 h-4 mr-2" />
+      Change Password
+    </Button>
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={() => handleDeleteUser(user.id)}
+      className="text-red-600 hover:bg-red-50"
+    >
+      <Trash2 className="w-4 h-4" />
+    </Button>
+  </div>
+</td>
+                    
                   </tr>
                 ))}
               </tbody>
