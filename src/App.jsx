@@ -8,6 +8,7 @@ import AuthGuard from './components/auth/AuthGuard';
 import UserManagement from './pages/UserManagement';
 import Reports from './pages/Reports';
 import Dashboard from './pages/Dashboard';
+import UserGuide from './pages/UserGuide';
 
 
 
@@ -22,6 +23,7 @@ function App() {
     <Route path="requests" element={<RequestsPage />} />
     <Route path="reports" element={<Reports />} />
     <Route path="users" element={<UserManagement />} />
+    <Route path="guide" element={<UserGuide />} />
     <Route index element={<Navigate to="/dashboard" replace />} />
   </Route>
 </Routes>
