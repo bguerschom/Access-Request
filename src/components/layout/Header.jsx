@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { LogOut, User, Bell, Sun, Moon } from 'lucide-react';
+import { LogOut, User, Sun, Moon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { auth } from '@/config/firebase';
 import { useTheme } from '@/context/ThemeContext';
@@ -18,8 +18,8 @@ export const Header = () => {
   };
 
   return (
-    <header className="bg-white dark:bg-gray-800 shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <header className="bg-white dark:bg-gray-800 shadow-sm w-full fixed top-0 z-50">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Left Side: Logo */}
           <div className="flex items-center">
@@ -31,7 +31,8 @@ export const Header = () => {
           </div>
 
           {/* Right Side: Theme Toggle, User Info, Logout */}
-          <div className="flex items-center space-x-6">
+          <div className="flex items-center space-x-4">
+            {/* Theme Toggle */}
             <Button
               variant="ghost"
               size="sm"
@@ -44,11 +45,13 @@ export const Header = () => {
               )}
             </Button>
 
-            <div className="flex items-center text-sm text-gray-600 dark:text-gray-300">
+            {/* User Info */}
+            <div className="hidden sm:flex items-center text-sm text-gray-600 dark:text-gray-300">
               <User className="h-4 w-4 mr-2" />
               <span>{auth.currentUser?.email}</span>
             </div>
 
+            {/* Logout */}
             <Button
               variant="ghost"
               size="sm"
