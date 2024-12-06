@@ -36,7 +36,7 @@ export const Sidebar = () => {
       path: '/users',
       icon: <Users size={20} />,
       label: 'User Management',
-      roles: ['admin'] // Only admin can manage users
+      roles: ['admin', 'user'] // Only admin can manage users
     },
     {
       path: '/settings',
