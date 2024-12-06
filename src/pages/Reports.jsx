@@ -19,14 +19,20 @@ import {
   Pie,
   Cell
 } from 'recharts';
-import { Download, Filter, Calendar, FileText } from 'lucide-react';
+import { Download, FileText, Filter, Search } from 'lucide-react';
 import * as XLSX from 'xlsx';
-import { PDFDownloadLink } from '@react-pdf/renderer';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 const Reports = () => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [dateRange, setDateRange] = useState('week'); // week, month, year
+  const [filters, setFilters] = useState({
+    dateRange: 'all',
+    status: 'all',
+    requestedBy: 'all',
+    searchTerm: ''
+  });
   const [summaryStats, setSummaryStats] = useState({
     total: 0,
     active: 0,
@@ -36,14 +42,7 @@ const Reports = () => {
 
   useEffect(() => {
     fetchData();
-  }, [dateRange]);
-
-    const [filters, setFilters] = useState({
-    dateRange: 'all',
-    status: 'all',
-    requestedBy: 'all',
-    searchTerm: ''
-  });
+  }, []);
 
   const fetchData = async () => {
     try {
@@ -63,49 +62,112 @@ const Reports = () => {
     }
   };
 
-  // Enhanced statistics calculation
   const calculateStats = (data) => {
     const currentDate = new Date();
+    
     const stats = {
       total: data.length,
       active: data.filter(req => new Date(req.accessEndDate) >= currentDate).length,
       expired: data.filter(req => new Date(req.accessEndDate) < currentDate).length,
       checkedIn: data.filter(req => req.checkedIn).length,
-      // Detailed analytics
-      uniqueRequestors: new Set(data.map(req => req.requestedFor)).size,
-      averageAccessDuration: calculateAverageDuration(data),
-      mostFrequentVisitor: findMostFrequent(data, 'requestedFor'),
-      weeklyTrend: calculateWeeklyTrend(data)
+      uniqueRequestors: new Set(data.map(req => req.requestedFor)).size
     };
+
     setSummaryStats(stats);
   };
 
+  const getFilteredData = () => {
+    return requests.filter(req => {
+      const endDate = new Date(req.accessEndDate);
+      const currentDate = new Date();
+      const isActive = endDate >= currentDate;
+
+      const matchesStatus = 
+        filters.status === 'all' ? true :
+        filters.status === 'active' ? isActive :
+        filters.status === 'expired' ? !isActive :
+        filters.status === 'checkedIn' ? req.checkedIn : true;
+
+      const matchesRequestor = 
+        filters.requestedBy === 'all' ? true :
+        req.requestedFor === filters.requestedBy;
+
+      const matchesSearch = 
+        filters.searchTerm === '' ? true :
+        req.requestNumber.toLowerCase().includes(filters.searchTerm.toLowerCase()) ||
+        req.requestedFor.toLowerCase().includes(filters.searchTerm.toLowerCase());
+
+      return matchesStatus && matchesRequestor && matchesSearch;
+    });
+  };
+
   const exportToExcel = () => {
-    const exportData = requests.map(req => ({
+    const filteredData = getFilteredData();
+    const exportData = filteredData.map(req => ({
       'Request Number': req.requestNumber,
       'Requested For': req.requestedFor,
       'Start Date': new Date(req.accessStartDate).toLocaleDateString(),
       'End Date': new Date(req.accessEndDate).toLocaleDateString(),
       'Status': new Date(req.accessEndDate) >= new Date() ? 'Active' : 'Expired',
-      'Duration (Days)': calculateDuration(req.accessStartDate, req.accessEndDate),
       'Checked In': req.checkedIn ? 'Yes' : 'No',
       'Check-in Times': req.checkInHistory?.length || 0,
-      'Last Check-in': req.checkInHistory?.length ? 
-        new Date(req.checkInHistory[req.checkInHistory.length - 1].checkInTime).toLocaleString() : 'N/A',
       'Created By': req.uploadedBy,
-      'Created Date': new Date(req.createdAt).toLocaleString(),
+      'Created Date': new Date(req.createdAt).toLocaleDateString(),
+      'Description': req.description,
+      'Access Duration (Days)': Math.ceil((new Date(req.accessEndDate) - new Date(req.accessStartDate)) / (1000 * 60 * 60 * 24))
     }));
 
     const ws = XLSX.utils.json_to_sheet(exportData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Requests');
-    XLSX.writeFile(wb, 'detailed_access_requests_report.xlsx');
+    XLSX.writeFile(wb, 'access_requests_report.xlsx');
   };
 
-  // Get data for charts
+  const exportToPDF = () => {
+    const filteredData = getFilteredData();
+    const doc = new jsPDF();
+    
+    // Add title and summary
+    doc.setFontSize(16);
+    doc.text('Access Request Report', 14, 15);
+    
+    doc.setFontSize(11);
+    doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 25);
+    doc.text(`Total Requests: ${summaryStats.total}`, 14, 32);
+    doc.text(`Active Requests: ${summaryStats.active}`, 14, 39);
+    doc.text(`Expired Requests: ${summaryStats.expired}`, 14, 46);
+    
+    // Create table
+    const tableColumn = [
+      "Request Number",
+      "Requested For",
+      "Status",
+      "Start Date",
+      "End Date"
+    ];
+    
+    const tableRows = filteredData.map(req => [
+      req.requestNumber,
+      req.requestedFor,
+      new Date(req.accessEndDate) >= new Date() ? 'Active' : 'Expired',
+      new Date(req.accessStartDate).toLocaleDateString(),
+      new Date(req.accessEndDate).toLocaleDateString()
+    ]);
+
+    doc.autoTable({
+      head: [tableColumn],
+      body: tableRows,
+      startY: 55,
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [10, 38, 71] }
+    });
+
+    doc.save('access_requests_report.pdf');
+  };
+
   const getChartData = () => {
-    // Group by month
-    const monthlyData = requests.reduce((acc, req) => {
+    const filteredData = getFilteredData();
+    const monthlyData = filteredData.reduce((acc, req) => {
       const month = new Date(req.createdAt).toLocaleString('default', { month: 'long' });
       acc[month] = (acc[month] || 0) + 1;
       return acc;
@@ -117,12 +179,11 @@ const Reports = () => {
     }));
   };
 
-  if (loading) return <div>Loading reports...</div>;
+  if (loading) return <div className="p-8 text-center">Loading reports...</div>;
 
- 
   return (
     <div className="p-6 space-y-8">
-      {/* Title and Export Options */}
+      {/* Header */}
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-[#0A2647]">Access Request Reports</h1>
         <div className="flex space-x-3">
@@ -130,22 +191,20 @@ const Reports = () => {
             <Download className="w-4 h-4 mr-2" />
             Export Excel
           </Button>
-          <PDFDownloadLink 
-            document={<ReportPDF data={requests} stats={summaryStats} />}
-            fileName="access_requests_report.pdf"
-          >
-            <Button>
-              <FileText className="w-4 h-4 mr-2" />
-              Export PDF
-            </Button>
-          </PDFDownloadLink>
+          <Button onClick={exportToPDF}>
+            <FileText className="w-4 h-4 mr-2" />
+            Export PDF
+          </Button>
         </div>
       </div>
 
-      {/* Interactive Filters */}
-      <Card className="bg-white">
+      {/* Filters */}
+      <Card>
         <CardHeader>
-          <CardTitle>Filters</CardTitle>
+          <CardTitle className="flex items-center">
+            <Filter className="w-5 h-5 mr-2" />
+            Filters
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -157,7 +216,6 @@ const Reports = () => {
                 className="w-full border rounded-md p-2"
               >
                 <option value="all">All Time</option>
-                <option value="today">Today</option>
                 <option value="week">This Week</option>
                 <option value="month">This Month</option>
                 <option value="year">This Year</option>
@@ -186,27 +244,32 @@ const Reports = () => {
                 className="w-full border rounded-md p-2"
               >
                 <option value="all">All Users</option>
-                {Array.from(new Set(requests.map(req => req.requestedFor))).map(user => (
-                  <option key={user} value={user}>{user}</option>
-                ))}
+                {Array.from(new Set(requests.map(req => req.requestedFor)))
+                  .sort()
+                  .map(user => (
+                    <option key={user} value={user}>{user}</option>
+                  ))}
               </select>
             </div>
 
             <div>
               <label className="block text-sm font-medium mb-1">Search</label>
-              <input
-                type="text"
-                value={filters.searchTerm}
-                onChange={(e) => setFilters({...filters, searchTerm: e.target.value})}
-                placeholder="Search requests..."
-                className="w-full border rounded-md p-2"
-              />
+              <div className="relative">
+                <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  value={filters.searchTerm}
+                  onChange={(e) => setFilters({...filters, searchTerm: e.target.value})}
+                  placeholder="Search requests..."
+                  className="w-full pl-10 pr-4 py-2 border rounded-md"
+                />
+              </div>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Summary Statistics */}
+      {/* Summary Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
         <div className="col-span-2 md:col-start-2">
           <Card>
@@ -230,11 +293,11 @@ const Reports = () => {
         </div>
       </div>
 
-      {/* Detailed Analytics */}
+      {/* Charts */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Request Trends</CardTitle>
+            <CardTitle>Monthly Request Trend</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-[300px]">
@@ -245,14 +308,43 @@ const Reports = () => {
                   <YAxis />
                   <Tooltip />
                   <Legend />
-                  <Bar dataKey="requests" fill="#0A2647" />
+                  <Bar dataKey="requests" fill="#0A2647" name="Requests" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
 
-        {/* Add more charts and analytics here */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Status Distribution</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={[
+                      { name: 'Active', value: summaryStats.active },
+                      { name: 'Expired', value: summaryStats.expired }
+                    ]}
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={100}
+                    fill="#0A2647"
+                    dataKey="value"
+                    label
+                  >
+                    <Cell fill="#0A2647" />
+                    <Cell fill="#EF4444" />
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
