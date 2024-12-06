@@ -13,7 +13,7 @@ export const Layout = () => {
   return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
       <Header toggleSidebar={toggleSidebar} />
-      <div className="flex flex-1">
+      <div className="flex flex-1 pt-16">
         <Sidebar isOpen={sidebarOpen} />
         <main className="flex-1 p-6">
           <Outlet />
