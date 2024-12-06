@@ -1,4 +1,3 @@
-// src/components/layout/Sidebar.jsx
 import { NavLink } from 'react-router-dom';
 import { 
   Home, 
@@ -58,7 +57,7 @@ export const Sidebar = () => {
       path: '/guide',
       icon: <BookOpen size={20} />,
       label: 'User Guide',
-      access: 'guide'  // Added to ROLE_ACCESS for all roles
+      access: 'guide'
     }
   ];
 
@@ -70,22 +69,24 @@ export const Sidebar = () => {
   return (
     <aside className="w-64 min-h-[calc(100vh-64px)] bg-white shadow-lg">
       <nav className="p-4 space-y-2">
-        {allowedNavItems.map((item) => (
-          <NavLink
-            key={item.path}
-            to={item.path}
-            className={({ isActive }) =>
-              `flex items-center space-x-2 px-4 py-3 rounded-lg transition-colors ${
-                isActive
-                  ? 'bg-[#0A2647] text-white'
-                  : 'text-gray-600 hover:bg-gray-100'
-              }`
-            }
-          >
-            {item.icon}
-            <span>{item.label}</span>
-          </NavLink>
-        ))}
+        <div className="flex flex-wrap gap-2">
+          {allowedNavItems.map((item) => (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              className={({ isActive }) =>
+                `flex items-center space-x-2 px-4 py-3 rounded-lg transition-colors w-full sm:w-auto ${
+                  isActive
+                    ? 'bg-[#0A2647] text-white'
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`
+              }
+            >
+              {item.icon}
+              <span>{item.label}</span>
+            </NavLink>
+          ))}
+        </div>
       </nav>
     </aside>
   );
