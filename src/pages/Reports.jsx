@@ -88,6 +88,13 @@ const Reports = () => {
     checkedIn: 0
   });
 
+const [showDateModal, setShowDateModal] = useState(false);
+const [selectedExportType, setSelectedExportType] = useState(null);
+const [dateRange, setDateRange] = useState({
+    startDate: '',
+    endDate: ''
+   });
+
     const canExport = () => {
     return userData?.role === 'admin' || userData?.role === 'user';
   };
@@ -277,14 +284,6 @@ const exportToPDF = () => {
   };
 
 
-
-  // Add modal state
-const [showDateModal, setShowDateModal] = useState(false);
-const [selectedExportType, setSelectedExportType] = useState(null); // 'excel' or 'pdf'
-const [dateRange, setDateRange] = useState({
-    startDate: '',
-    endDate: ''
-   });
 
 const handleExport = () => {
   if (selectedExportType === 'excel') {
