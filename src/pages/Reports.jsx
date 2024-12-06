@@ -1,4 +1,4 @@
-// src/pages/Reports.jsx
+
 import { useState, useEffect } from 'react';
 import { collection, query, getDocs } from 'firebase/firestore';
 import { db } from '@/config/firebase';
