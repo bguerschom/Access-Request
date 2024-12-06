@@ -255,64 +255,71 @@ const ExportModal = () => {
   
   if (loading) return <div className="p-8 text-center">Loading reports...</div>;
 
+      return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg p-6 w-96">
+          <h3 className="text-lg font-semibold mb-4">Select Date Range</h3>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm mb-1">Start Date</label>
+              <input
+                type="date"
+                value={dateRange.startDate}
+                onChange={(e) => setDateRange(prev => ({...prev, startDate: e.target.value}))}
+                className="w-full border rounded p-2"
+              />
+            </div>
+            <div>
+              <label className="block text-sm mb-1">End Date</label>
+              <input
+                type="date"
+                value={dateRange.endDate}
+                onChange={(e) => setDateRange(prev => ({...prev, endDate: e.target.value})}
+                className="w-full border rounded p-2"
+              />
+            </div>
+            <div className="flex justify-end space-x-3 mt-6">
+              <Button variant="outline" onClick={() => setShowDateModal(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleExport}>
+                Export
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+  
   return (
+    <div className="p-6 space-y-8">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold text-[#0A2647]">Access Request Reports</h1>
+        {canExport() && (
+          <div className="flex space-x-3">
+            <Button onClick={() => {
+              setSelectedExportType('excel');
+              setShowDateModal(true);
+            }}>
+              <Download className="w-4 h-4 mr-2" />
+              Export Excel
+            </Button>
+            <Button onClick={() => {
+              setSelectedExportType('pdf');
+              setShowDateModal(true);
+            }}>
+              <FileText className="w-4 h-4 mr-2" />
+              Export PDF
+            </Button>
+          </div>
+        )}
+      </div>
 
-       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-     <div className="bg-white rounded-lg p-6 w-96">
-       <h3 className="text-lg font-semibold mb-4">Select Date Range</h3>
-       <div className="space-y-4">
-         <div>
-           <label className="block text-sm mb-1">Start Date</label>
-           <input
-             type="date"
-             value={dateRange.startDate}
-             onChange={(e) => setDateRange(prev => ({...prev, startDate: e.target.value}))}
-             className="w-full border rounded p-2"
-           />
-         </div>
-         <div>
-           <label className="block text-sm mb-1">End Date</label>
-           <input
-             type="date"
-             value={dateRange.endDate}
-             onChange={(e) => setDateRange(prev => ({...prev, endDate: e.target.value})}
-             className="w-full border rounded p-2"
-           />
-         </div>
-         <div className="flex justify-end space-x-3 mt-6">
-           <Button variant="outline" onClick={() => setShowDateModal(false)}>
-             Cancel
-           </Button>
-           <Button onClick={handleExport}>
-             Export
-           </Button>
-         </div>
-       </div>
-     </div>
-   </div>
- );
-};
-
-// Update export buttons
-<div className="flex space-x-3">
- <Button onClick={() => {
-   setSelectedExportType('excel');
-   setShowDateModal(true);
- }}>
-   <Download className="w-4 h-4 mr-2" />
-   Export Excel
- </Button>
- <Button onClick={() => {
-   setSelectedExportType('pdf');
-   setShowDateModal(true);
- }}>
-   <FileText className="w-4 h-4 mr-2" />
-   Export PDF
- </Button>
-</div>
-
-{/* Add modal to component */}
-<ExportModal />
+      {/* Rest of the component remains the same */}
+      
+      <ExportModal />
+    </div>
 
     
     <div className="p-6 space-y-8">
