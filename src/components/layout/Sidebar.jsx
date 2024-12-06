@@ -1,54 +1,70 @@
 // src/components/layout/Sidebar.jsx
 import { NavLink } from 'react-router-dom';
-import { Home, Upload, FileText, BarChart2, Users, Settings } from 'lucide-react';
+import { 
+  Home, 
+  Upload, 
+  FileText, 
+  BarChart2, 
+  Users, 
+  Settings,
+  BookOpen 
+} from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { ROLE_ACCESS } from '@/config/roles';
 
 export const Sidebar = () => {
-  const { user, userData } = useAuth(); // Updated useAuth hook to include user role
+  const { userData } = useAuth();
+  const userRole = userData?.role || 'user';
 
-  // Define navigation items with role access
+  // Define all possible navigation items
   const navItems = [
     {
       path: '/dashboard',
       icon: <Home size={20} />,
       label: 'Dashboard',
-      roles: ['admin', 'user', 'security'] // Everyone can see dashboard
+      access: 'dashboard'
     },
     {
       path: '/upload',
       icon: <Upload size={20} />,
       label: 'Upload Request',
-      roles: ['admin', 'user'] // Only admin and regular users can upload
+      access: 'upload'
     },
     {
       path: '/requests',
       icon: <FileText size={20} />,
       label: 'View Requests',
-      roles: ['admin', 'user', 'security'] // Everyone can view requests
+      access: 'requests'
     },
     {
       path: '/reports',
       icon: <BarChart2 size={20} />,
       label: 'Reports',
-      roles: ['admin', 'user', 'security'] // Only admin can see reports
+      access: 'reports'
     },
     {
       path: '/users',
       icon: <Users size={20} />,
       label: 'User Management',
-      roles: ['admin'] // Only admin can manage users
+      access: 'users'
     },
     {
       path: '/settings',
       icon: <Settings size={20} />,
       label: 'Settings',
-      roles: ['admin'] // Only admin can access settings
+      access: 'settings'
+    },
+    {
+      path: '/guide',
+      icon: <BookOpen size={20} />,
+      label: 'User Guide',
+      access: 'guide'  // Added to ROLE_ACCESS for all roles
     }
   ];
 
-  // Filter nav items based on user role
+  // Filter nav items based on user role access
   const allowedNavItems = navItems.filter(item => 
-    item.roles.includes(userData?.role || 'user')
+    ROLE_ACCESS[userRole]?.access.includes(item.access)
   );
 
   return (
