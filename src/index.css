@@ -80,54 +80,69 @@ body {
   animation: fadeIn 0.5s ease-out forwards;
 }
 
-@keyframes float {
-  0% { transform: translateY(0px) rotate(0deg); }
-  50% { transform: translateY(-20px) rotate(10deg); }
-  100% { transform: translateY(0px) rotate(0deg); }
+
+@keyframes flow {
+  0% {
+    d: path("M0,200 C150,200 250,100 500,100 C750,100 850,200 1000,200");
+  }
+  50% {
+    d: path("M0,200 C150,100 250,200 500,200 C750,200 850,100 1000,200");
+  }
+  100% {
+    d: path("M0,200 C150,200 250,100 500,100 C750,100 850,200 1000,200");
+  }
 }
 
-@keyframes float-delayed {
-  0% { transform: translateY(0px) rotate(0deg); }
-  50% { transform: translateY(-15px) rotate(-10deg); }
-  100% { transform: translateY(0px) rotate(0deg); }
+@keyframes bounce-slow {
+  0%, 100% {
+    transform: translateY(-5%);
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+  }
+  50% {
+    transform: translateY(0);
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  }
 }
 
-@keyframes float-slow {
-  0% { transform: translateY(0px) rotate(0deg); }
-  50% { transform: translateY(-10px) rotate(5deg); }
-  100% { transform: translateY(0px) rotate(0deg); }
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-@keyframes slide-text {
-  0%, 25% { transform: translateY(0); }
-  33%, 58% { transform: translateY(-4rem); }
-  66%, 91% { transform: translateY(-8rem); }
-  100% { transform: translateY(0); }
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
 }
 
-.animate-float {
-  animation: float 6s ease-in-out infinite;
+.animate-flow {
+  animation: flow 8s infinite;
 }
 
-.animate-float-delayed {
-  animation: float-delayed 7s ease-in-out infinite;
-  animation-delay: 1s;
+.animate-flow-delayed {
+  animation: flow 8s infinite;
+  animation-delay: -2s;
 }
 
-.animate-float-slow {
-  animation: float-slow 8s ease-in-out infinite;
-  animation-delay: 2s;
+.animate-flow-slow {
+  animation: flow 8s infinite;
+  animation-delay: -4s;
 }
 
-.animate-slide-text {
-  animation: slide-text 12s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+.animate-bounce-slow {
+  animation: bounce-slow 3s infinite;
 }
 
-/* Add hover effects */
-.hover-scale {
-  transition: transform 0.2s;
+.animate-fade-in {
+  animation: fade-in 1s ease-out;
 }
 
-.hover-scale:hover {
-  transform: scale(1.02);
+.animate-shake {
+  animation: shake 0.5s ease-in-out;
 }
