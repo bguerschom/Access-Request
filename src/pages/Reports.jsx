@@ -198,6 +198,27 @@ const Reports = () => {
         </div>
       </div>
 
+      {/* Summary Stats */}
+<div className="flex flex-col items-center space-y-6 max-w-md mx-auto">
+  <Card className="w-full">
+    <CardContent className="p-6">
+      <div className="text-center">
+        <h3 className="text-lg font-medium text-gray-600">Total Requests</h3>
+        <p className="text-4xl font-bold text-[#0A2647] mt-2">{summaryStats.total}</p>
+      </div>
+    </CardContent>
+  </Card>
+  <Card className="w-full">
+    <CardContent className="p-6">
+      <div className="text-center">
+        <h3 className="text-lg font-medium text-gray-600">Active Requests</h3>
+        <p className="text-4xl font-bold text-green-600 mt-2">{summaryStats.active}</p>
+      </div>
+    </CardContent>
+  </Card>
+</div>
+      
+
       {/* Filters */}
       <Card>
         <CardHeader>
@@ -269,35 +290,12 @@ const Reports = () => {
         </CardContent>
       </Card>
 
-      {/* Summary Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-        <div className="col-span-2 md:col-start-2">
-          <Card>
-            <CardContent className="p-6">
-              <div className="text-center">
-                <h3 className="text-lg font-medium text-gray-600">Total Requests</h3>
-                <p className="text-4xl font-bold text-[#0A2647] mt-2">{summaryStats.total}</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-        <div className="col-span-2 md:col-start-2">
-          <Card>
-            <CardContent className="p-6">
-              <div className="text-center">
-                <h3 className="text-lg font-medium text-gray-600">Active Requests</h3>
-                <p className="text-4xl font-bold text-green-600 mt-2">{summaryStats.active}</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
 
       {/* Charts */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Monthly Request Trend</CardTitle>
+            <CardTitle>Request Trend</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-[300px]">
