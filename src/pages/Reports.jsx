@@ -199,8 +199,8 @@ const Reports = () => {
       </div>
 
       {/* Summary Stats */}
-<div className="flex flex-col items-center space-y-6 max-w-md mx-auto">
-  <Card className="w-full">
+<div className="flex justify-center gap-6">
+  <Card className="w-64"> {/* Adjust w-64 to your preferred width */}
     <CardContent className="p-6">
       <div className="text-center">
         <h3 className="text-lg font-medium text-gray-600">Total Requests</h3>
@@ -208,7 +208,7 @@ const Reports = () => {
       </div>
     </CardContent>
   </Card>
-  <Card className="w-full">
+  <Card className="w-64"> {/* Adjust w-64 to your preferred width */}
     <CardContent className="p-6">
       <div className="text-center">
         <h3 className="text-lg font-medium text-gray-600">Active Requests</h3>
