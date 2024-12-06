@@ -12,7 +12,7 @@ import {
   Settings,
   BarChart
 } from 'lucide-react';
-import './styles/userGuide.css';
+import '../styles/userGuide.css';
 
 
 
