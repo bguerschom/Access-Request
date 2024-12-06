@@ -1,44 +1,60 @@
+// src/components/layout/Sidebar.jsx
 import { NavLink } from 'react-router-dom';
-import { Upload, FileText, Home, BarChart2, Users, Settings, HelpCircle } from 'lucide-react';
+import { Home, Upload, FileText, BarChart2, Users, Settings } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 
-export const Sidebar = ({ isOpen = true }) => {  // Add isOpen prop with default value
+export const Sidebar = () => {
+  const { user, userData } = useAuth(); // Updated useAuth hook to include user role
+
+  // Define navigation items with role access
   const navItems = [
     {
       path: '/dashboard',
       icon: <Home size={20} />,
-      label: 'Dashboard'
+      label: 'Dashboard',
+      roles: ['admin', 'user', 'security'] // Everyone can see dashboard
     },
     {
       path: '/upload',
       icon: <Upload size={20} />,
-      label: 'Upload Request'
+      label: 'Upload Request',
+      roles: ['admin', 'user'] // Only admin and regular users can upload
     },
     {
       path: '/requests',
       icon: <FileText size={20} />,
-      label: 'View Requests'
-    },
-    {
-      path: '/users',
-      icon: <Users size={20} />,
-      label: 'User Management'
+      label: 'View Requests',
+      roles: ['admin', 'user', 'security'] // Everyone can view requests
     },
     {
       path: '/reports',
       icon: <BarChart2 size={20} />,
-      label: 'Reports'
+      label: 'Reports',
+      roles: ['admin'] // Only admin can see reports
+    },
+    {
+      path: '/users',
+      icon: <Users size={20} />,
+      label: 'User Management',
+      roles: ['admin'] // Only admin can manage users
+    },
+    {
+      path: '/settings',
+      icon: <Settings size={20} />,
+      label: 'Settings',
+      roles: ['admin'] // Only admin can access settings
     }
   ];
+
+  // Filter nav items based on user role
+  const allowedNavItems = navItems.filter(item => 
+    item.roles.includes(userData?.role || 'user')
+  );
+
   return (
-    <aside className={`
-      fixed inset-y-0 left-0 z-50
-      w-64 bg-white dark:bg-gray-800 shadow-lg
-      transform transition-transform duration-300 ease-in-out
-      ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-      lg:relative lg:translate-x-0
-    `}>
+    <aside className="w-64 min-h-[calc(100vh-64px)] bg-white shadow-lg">
       <nav className="p-4 space-y-2">
-        {navItems.map((item) => (
+        {allowedNavItems.map((item) => (
           <NavLink
             key={item.path}
             to={item.path}
@@ -46,7 +62,7 @@ export const Sidebar = ({ isOpen = true }) => {  // Add isOpen prop with default
               `flex items-center space-x-2 px-4 py-3 rounded-lg transition-colors ${
                 isActive
                   ? 'bg-[#0A2647] text-white'
-                  : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  : 'text-gray-600 hover:bg-gray-100'
               }`
             }
           >
