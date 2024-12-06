@@ -68,7 +68,7 @@ export const Sidebar = () => {
   );
 
   return (
-    <aside className="w-64 min-h-[calc(100vh-64px)] bg-white shadow-lg">
+    <aside className="w-64 h-[calc(100vh-4rem)] bg-white shadow-lg">
       <nav className="p-4 space-y-2">
         {allowedNavItems.map((item) => (
           <NavLink
