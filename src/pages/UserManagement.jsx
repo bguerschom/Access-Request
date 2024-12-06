@@ -1,25 +1,31 @@
 // src/components/users/UserManagement.jsx
 import { useState, useEffect } from 'react';
-import { collection, getDocs, updateDoc, doc } from 'firebase/firestore';
-import { updatePassword } from 'firebase/auth'; // for password updates
+import { collection, getDocs, updateDoc, doc, setDoc } from 'firebase/firestore';
+import { createUserWithEmailAndPassword, updatePassword } from 'firebase/auth'; 
 import { db, auth } from '@/config/firebase';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Settings, Lock } from 'lucide-react';
+import { Settings, Lock, UserPlus, X } from 'lucide-react';
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState(null);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [error, setError] = useState(null);
+  const [newUserData, setNewUserData] = useState({
+    email: '',
+    password: '',
+    name: '',
+    role: 'user'
+  });
 
-  // Define available roles and their sidebar access
   const roles = {
     admin: ['dashboard', 'upload', 'requests', 'reports', 'users', 'settings'],
     user: ['dashboard', 'upload', 'requests', 'reports'],
-    security: ['dashboard', 'requests','reports' ]
+    security: ['dashboard', 'requests', 'reports']
   };
 
   useEffect(() => {
@@ -42,16 +48,44 @@ const UserManagement = () => {
     }
   };
 
+  const handleAddUser = async (e) => {
+    e.preventDefault();
+    setError(null);
+    
+    try {
+      // Create auth user
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        newUserData.email,
+        newUserData.password
+      );
+
+      // Add user data to Firestore
+      await setDoc(doc(db, 'users', userCredential.user.uid), {
+        email: newUserData.email,
+        name: newUserData.name,
+        role: newUserData.role,
+        createdAt: new Date().toISOString()
+      });
+
+      setIsAddUserModalOpen(false);
+      setNewUserData({
+        email: '',
+        password: '',
+        name: '',
+        role: 'user'
+      });
+      fetchUsers();
+    } catch (error) {
+      setError(error.message);
+    }
+  };
+
   const handlePasswordChange = async (userId, newPassword) => {
     try {
-      // Update password in Firebase Auth
-      // Note: This might need additional setup or a different approach
-      // depending on your authentication setup
       await updatePassword(auth.currentUser, newPassword);
-
-      setIsEditModalOpen(false);
+      setIsPasswordModalOpen(false);
       setNewPassword('');
-      // Show success message
     } catch (error) {
       setError('Failed to update password');
       console.error('Error updating password:', error);
@@ -69,26 +103,19 @@ const UserManagement = () => {
     }
   };
 
-  // Password Change Modal
-  const PasswordChangeModal = ({ isOpen, onClose, onSubmit }) => {
+  const Modal = ({ isOpen, onClose, title, children }) => {
     if (!isOpen) return null;
 
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div className="bg-white rounded-lg p-6 w-full max-w-md">
-          <h3 className="text-lg font-semibold mb-4">Change Password</h3>
-          <input
-            type="password"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            placeholder="New Password"
-            className="w-full p-2 border rounded mb-4"
-          />
-          {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
-          <div className="flex justify-end space-x-3">
-            <Button variant="outline" onClick={onClose}>Cancel</Button>
-            <Button onClick={() => onSubmit(newPassword)}>Update Password</Button>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold">{title}</h3>
+            <button onClick={onClose}>
+              <X className="w-5 h-5" />
+            </button>
           </div>
+          {children}
         </div>
       </div>
     );
@@ -99,8 +126,15 @@ const UserManagement = () => {
   return (
     <div className="p-6">
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>User Management</CardTitle>
+          <Button 
+            onClick={() => setIsAddUserModalOpen(true)}
+            className="bg-[#0A2647]"
+          >
+            <UserPlus className="w-4 h-4 mr-2" />
+            Add New User
+          </Button>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
@@ -148,7 +182,7 @@ const UserManagement = () => {
                         size="sm"
                         onClick={() => {
                           setSelectedUser(user);
-                          setIsEditModalOpen(true);
+                          setIsPasswordModalOpen(true);
                         }}
                       >
                         <Lock className="w-4 h-4 mr-2" />
@@ -163,15 +197,101 @@ const UserManagement = () => {
         </CardContent>
       </Card>
 
-      <PasswordChangeModal
-        isOpen={isEditModalOpen}
+      {/* Add User Modal */}
+      <Modal
+        isOpen={isAddUserModalOpen}
+        onClose={() => setIsAddUserModalOpen(false)}
+        title="Add New User"
+      >
+        <form onSubmit={handleAddUser} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">Email</label>
+            <input
+              type="email"
+              required
+              className="w-full p-2 border rounded"
+              value={newUserData.email}
+              onChange={(e) => setNewUserData({ ...newUserData, email: e.target.value })}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">Password</label>
+            <input
+              type="password"
+              required
+              className="w-full p-2 border rounded"
+              value={newUserData.password}
+              onChange={(e) => setNewUserData({ ...newUserData, password: e.target.value })}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">Name</label>
+            <input
+              type="text"
+              required
+              className="w-full p-2 border rounded"
+              value={newUserData.name}
+              onChange={(e) => setNewUserData({ ...newUserData, name: e.target.value })}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">Role</label>
+            <select
+              className="w-full p-2 border rounded"
+              value={newUserData.role}
+              onChange={(e) => setNewUserData({ ...newUserData, role: e.target.value })}
+            >
+              <option value="admin">Admin</option>
+              <option value="user">User</option>
+              <option value="security">Security</option>
+            </select>
+          </div>
+
+          {error && (
+            <div className="text-red-500 text-sm">{error}</div>
+          )}
+
+          <div className="flex justify-end space-x-3">
+            <Button variant="outline" onClick={() => setIsAddUserModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="submit">Add User</Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Password Change Modal */}
+      <Modal
+        isOpen={isPasswordModalOpen}
         onClose={() => {
-          setIsEditModalOpen(false);
+          setIsPasswordModalOpen(false);
           setNewPassword('');
           setError(null);
         }}
-        onSubmit={(password) => handlePasswordChange(selectedUser?.id, password)}
-      />
+        title="Change Password"
+      >
+        <div className="space-y-4">
+          <input
+            type="password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            placeholder="New Password"
+            className="w-full p-2 border rounded"
+          />
+          {error && <p className="text-red-500 text-sm">{error}</p>}
+          <div className="flex justify-end space-x-3">
+            <Button variant="outline" onClick={() => setIsPasswordModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={() => handlePasswordChange(selectedUser?.id, newPassword)}>
+              Update Password
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };
