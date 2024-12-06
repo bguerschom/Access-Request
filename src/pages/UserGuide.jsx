@@ -12,6 +12,8 @@ import {
   Settings,
   BarChart
 } from 'lucide-react';
+import './styles/userGuide.css';
+
 
 const UserGuide = () => {
   const { userData } = useAuth();
@@ -190,34 +192,6 @@ const UserGuide = () => {
       }
     ]
   }
-
-
-  // Add this CSS for enhanced animations
-const additionalStyles = `
-  @keyframes float {
-    0% { transform: translateY(0px); }
-    50% { transform: translateY(-10px); }
-    100% { transform: translateY(0px); }
-  }
-
-  .float-animation {
-    animation: float 3s ease-in-out infinite;
-  }
-
-  @keyframes highlight {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-  }
-
-  .gradient-text {
-    background: linear-gradient(45deg, #0A2647, #144272, #0A2647);
-    background-size: 200% 200%;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    animation: highlight 3s ease infinite;
-  }
-`;
 
 
  }; 
