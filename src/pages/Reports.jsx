@@ -23,8 +23,10 @@ import { Download, FileText, Filter, Search } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import { useAuth } from '@/hooks/useAuth';
 
 const Reports = () => {
+  const { userData } = useAuth();
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
@@ -39,6 +41,10 @@ const Reports = () => {
     expired: 0,
     checkedIn: 0
   });
+
+    const canExport = () => {
+    return userData?.role === 'admin' || userData?.role === 'user';
+  };
 
   useEffect(() => {
     fetchData();
@@ -183,19 +189,21 @@ const Reports = () => {
 
   return (
     <div className="p-6 space-y-8">
-      {/* Header */}
+      {/* Header - Modified to show/hide export buttons based on role */}
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-[#0A2647]">Access Request Reports</h1>
-        <div className="flex space-x-3">
-          <Button onClick={exportToExcel}>
-            <Download className="w-4 h-4 mr-2" />
-            Export Excel
-          </Button>
-          <Button onClick={exportToPDF}>
-            <FileText className="w-4 h-4 mr-2" />
-            Export PDF
-          </Button>
-        </div>
+        {canExport() && ( // Only show for admin and user roles
+          <div className="flex space-x-3">
+            <Button onClick={exportToExcel}>
+              <Download className="w-4 h-4 mr-2" />
+              Export Excel
+            </Button>
+            <Button onClick={exportToPDF}>
+              <FileText className="w-4 h-4 mr-2" />
+              Export PDF
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Summary Stats */}
