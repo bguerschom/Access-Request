@@ -107,7 +107,6 @@ const Dashboard = () => {
           </CardContent>
         </Card>
 
-// Update the Recent Requests section in Dashboard.jsx
 <Card>
   <CardHeader>
     <CardTitle>Recent Requests</CardTitle>
