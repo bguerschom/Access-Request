@@ -25,16 +25,18 @@ const Dashboard = () => {
       const q = query(
         requestsRef,
         orderBy('createdAt', 'desc'),
-        limit(3)
+        limit(5)
       );
       
       const snapshot = await getDocs(q);
       const requests = snapshot.docs.map(doc => ({
         id: doc.id,
         requestNumber: doc.data().requestNumber,
+        requestedFor: doc.data().requestedFor,
         createdAt: doc.data().createdAt
       }));
-      
+
+      console.log('Fetched requests:', requests);
       setRecentRequests(requests);
     } catch (error) {
       console.error('Error fetching recent requests:', error);
