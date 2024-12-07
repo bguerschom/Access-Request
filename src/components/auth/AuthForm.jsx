@@ -1,26 +1,33 @@
 // src/components/auth/AuthForm.jsx
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '@/config/firebase';
 import { FileText, ArrowRight, Send } from 'lucide-react';
+import { authService } from '@/services/auth';
 import { Button } from '@/components/ui/button';
+
+
 
 const AuthForm = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
-
-  const handleSubmit = async (e) => {
+  
+    const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-      navigate('/');
-    } catch (err) {
-      setError('Invalid credentials');
+    setError(null);
+    
+    const { user, error: loginError } = await authService.login(email, password);
+    
+    if (loginError) {
+      setError(loginError);
+      return;
     }
+
+    navigate('/');
   };
+
+  
 
   return (
     <div className="min-h-screen bg-[#0A2647] flex items-center justify-center p-4 relative overflow-hidden">
