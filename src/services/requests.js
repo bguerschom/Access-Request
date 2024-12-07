@@ -1,32 +1,46 @@
 // src/services/requests.js
-import { collection, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
-import { db } from '@/config/firebase';
+import { supabase } from '@/config/supabase'
 
 export const requestService = {
   create: async (requestData) => {
     try {
-      const docRef = await addDoc(collection(db, 'requests'), requestData);
-      return { id: docRef.id, error: null };
+      const { data, error } = await supabase
+        .from('requests')
+        .insert([requestData])
+        .select()
+      
+      if (error) throw error
+      return { id: data[0].id, error: null }
     } catch (error) {
-      return { id: null, error: error.message };
+      return { id: null, error: error.message }
     }
   },
 
   update: async (id, updates) => {
     try {
-      await updateDoc(doc(db, 'requests', id), updates);
-      return { error: null };
+      const { error } = await supabase
+        .from('requests')
+        .update(updates)
+        .eq('id', id)
+      
+      if (error) throw error
+      return { error: null }
     } catch (error) {
-      return { error: error.message };
+      return { error: error.message }
     }
   },
 
   delete: async (id) => {
     try {
-      await deleteDoc(doc(db, 'requests', id));
-      return { error: null };
+      const { error } = await supabase
+        .from('requests')
+        .delete()
+        .eq('id', id)
+      
+      if (error) throw error
+      return { error: null }
     } catch (error) {
-      return { error: error.message };
+      return { error: error.message }
     }
   }
-};
+}
