@@ -40,3 +40,45 @@ create policy "Users can insert their own requests"
 create policy "Users can update their own requests"
   on requests for update
   using (auth.uid() = user_id);
+
+
+
+
+-- Create users table
+create table user_profiles (
+  id uuid references auth.users primary key,
+  email text,
+  name text,
+  role text check (role in ('admin', 'user', 'security')),
+  department text,
+  created_at timestamp with time zone default now(),
+  last_login timestamp with time zone
+);
+
+-- RLS Policies for user_profiles
+alter table user_profiles enable row level security;
+
+-- Admins can view all profiles
+create policy "Admins can view all profiles"
+  on user_profiles for select
+  using (
+    exists (
+      select 1 from user_profiles up 
+      where up.id = auth.uid() and up.role = 'admin'
+    )
+  );
+
+-- Users can view their own profile
+create policy "Users can view own profile"
+  on user_profiles for select
+  using (auth.uid() = id);
+
+-- Only admins can insert/update profiles
+create policy "Admins can insert profiles"
+  on user_profiles for insert
+  with check (
+    exists (
+      select 1 from user_profiles up 
+      where up.id = auth.uid() and up.role = 'admin'
+    )
+  );
