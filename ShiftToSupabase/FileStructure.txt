@@ -1,0 +1,50 @@
+access-request/
+├── .github/
+│   └── workflows/
+│       └── deploy.yml
+├── public/
+│   └── logo.png
+├── src/
+│   ├── components/
+│   │   ├── auth/
+│   │   │   ├── AuthForm.jsx
+│   │   │   └── AuthGuard.jsx
+│   │   ├── layout/
+│   │   │   ├── Header.jsx
+│   │   │   ├── Footer.jsx
+│   │   │   ├── Sidebar.jsx
+│   │   │   └── Layout.jsx
+│   │   └── ui/
+│   │       ├── button.jsx
+│   │       └── card.jsx
+│   ├── config/
+│   │   ├── firebase.js        # Will be replaced with supabase.js
+│   │   └── roles.js
+│   ├── context/
+│   │   ├── AuthContext.jsx
+│   │   └── ThemeContext.jsx
+│   ├── hooks/
+│   │   ├── useAuth.js
+│   │   └── useRequest.js
+│   ├── pages/
+│   │   ├── Dashboard.jsx
+│   │   ├── Reports.jsx
+│   │   ├── RequestsPage.jsx
+│   │   ├── UploadPage.jsx
+│   │   ├── UserGuide.jsx
+│   │   └── UserManagement.jsx
+│   ├── services/
+│   │   ├── auth.js
+│   │   └── requests.js
+│   ├── utils/
+│   │   └── pdfParser.js
+│   ├── App.jsx
+│   ├── main.jsx
+│   └── index.css
+├── .env
+├── .gitignore
+├── index.html
+├── package.json
+├── postcss.config.js
+├── tailwind.config.js
+└── vite.config.js
